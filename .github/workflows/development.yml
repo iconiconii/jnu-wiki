@@ -1,0 +1,88 @@
+name: Development Checks
+
+on:
+  push:
+    branches-ignore: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # 代码质量检查
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ESLint
+        run: npm run lint
+        
+      - name: TypeScript type checking
+        run: npx tsc --noEmit
+        
+      - name: Check build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+          ADMIN_SECRET_KEY: test-admin-key
+        run: npm run build
+        
+      # 可选：代码格式检查
+      - name: Check Prettier formatting
+        run: |
+          npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || {
+            echo "❌ Code formatting issues found. Run 'npx prettier --write .' to fix."
+            exit 1
+          }
+
+  # 安全扫描
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+        
+      - name: Check for secrets in code
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  # 依赖检查
+  dependency-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Check outdated packages
+        run: npm outdated || true
+        
+      - name: Check for unused dependencies
+        run: |
+          npx depcheck || {
+            echo "⚠️ Found unused dependencies. Consider cleaning them up."
+          }

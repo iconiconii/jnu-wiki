@@ -47,7 +47,7 @@ export function AuthDialog({ isOpen, onOpenChange, onAuthSuccess, onAuthFailed, 
   const [attempts, setAttempts] = useState(0);
   const [showHint, setShowHint] = useState(false);
   
-  const config = (authConfig as any).config as AuthConfig;
+  const config = (authConfig as { config: AuthConfig }).config;
   const maxAttempts = config?.maxAttempts || 3;
 
   // 随机选择一个问题

@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, GraduationCap, Shield } from "lucide-react"
+import { Search, GraduationCap, Shield, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AuthDialog } from "@/components/auth-dialog"
+import { SubmissionForm } from "@/components/SubmissionForm"
 import { ServicesGrid } from "@/components/ServicesGrid"
 import { servicesConfig } from "@/data/services"
 import { Service } from "@/types/services"
@@ -12,6 +13,7 @@ import { Service } from "@/types/services"
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
@@ -82,6 +84,14 @@ export default function HomePage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              <Button
+                onClick={() => setShowSubmissionForm(true)}
+                className="bg-slate-900 hover:bg-slate-800 text-white"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                投稿
+              </Button>
             </div>
           </div>
         </div>
@@ -151,6 +161,12 @@ export default function HomePage() {
         onAuthSuccess={handleAuthSuccess}
         onAuthFailed={handleAuthFailed}
         allowClose={isAuthenticated} // 只有已认证后才允许关闭
+      />
+
+      {/* 投稿表单 */}
+      <SubmissionForm
+        isOpen={showSubmissionForm}
+        onOpenChange={setShowSubmissionForm}
       />
     </div>
   )
