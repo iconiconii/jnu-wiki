@@ -1,0 +1,19 @@
+<svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="160" fill="#F8FAFC"/>
+  <rect width="320" height="160" fill="url(#gradient)"/>
+  
+  <!-- 暨南大学标志性图案 -->
+  <circle cx="160" cy="60" r="20" fill="#64748B" opacity="0.3"/>
+  <rect x="140" y="90" width="40" height="8" rx="4" fill="#64748B" opacity="0.4"/>
+  <rect x="150" y="105" width="20" height="6" rx="3" fill="#94A3B8" opacity="0.5"/>
+  
+  <!-- 装饰线条 -->
+  <path d="M80 140 L240 140" stroke="#E2E8F0" stroke-width="2"/>
+  
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F1F5F9;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#E2E8F0;stop-opacity:0.9" />
+    </linearGradient>
+  </defs>
+</svg>

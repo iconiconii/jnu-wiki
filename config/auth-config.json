@@ -1,0 +1,50 @@
+{
+  "questions": [
+    {
+      "id": "text_question_1",
+      "type": "text",
+      "question": "番禺校区校霸是?",
+      "answers": [
+        "猫",
+        "猫猫",
+        "猫猫猫",
+        "cat",
+        "Cat"
+      ],
+      "hints": [
+        "提示：不是人",
+        "提示：🐈",
+        "提示：猫"
+      ],
+      "errorMessages": [
+        "再想想，它不是人！",
+        "不对哦，喜欢抓人！",
+        "这都能答不对？"
+      ]
+    },
+    {
+      "id": "text_question_2",
+      "type": "text",
+      "question": "暨南大学的校训是什么？",
+      "answers": [
+        "忠信笃敬",
+        "忠信篤敬",
+        "忠信笃敬",
+        "忠信篤敬"
+      ],
+      "hints": [
+        "提示：这你都不知道? 可以到恒大楼一楼办理退学了",
+        "提示：第一个字是'忠'，最后一个字是'敬'"
+      ],
+      "errorMessages": [
+        "我也记不得了",
+        "再仔细想想，这四个字体现了做人的品德..."
+      ]
+    }
+  ],
+  "config": {
+    "maxAttempts": 3,
+    "showHints": true,
+    "randomizeQuestions": true
+  }
+}

@@ -22,7 +22,7 @@ A modern, interactive service directory and information portal built with Next.j
 1. Clone the repository:
 ```bash
 git clone https://github.com/iconiconii/jnu-wiki.git
-cd jnu-wiki/my-app
+cd jnu-wiki
 ```
 
 2. Install dependencies:
@@ -48,7 +48,7 @@ pnpm dev
 ## 📁 Project Structure
 
 ```
-my-app/
+jnu-wiki/
 ├── app/                    # Next.js App Router
 │   ├── page.tsx           # Main page with service grid
 │   ├── layout.tsx         # Root layout

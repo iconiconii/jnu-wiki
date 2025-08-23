@@ -1,0 +1,7 @@
+<svg width="200" height="128" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="128" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="100" y="64" text-anchor="middle" dominant-baseline="middle" 
+        fill="#6b7280" font-family="system-ui, sans-serif" font-size="14">
+    卡片图像
+  </text>
+</svg>
