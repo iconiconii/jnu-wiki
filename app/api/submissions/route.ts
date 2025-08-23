@@ -5,6 +5,9 @@ import { sendEmail, generateSubmissionNotificationEmail } from '@/lib/email'
 // Rate limiting storage (在生产环境中应该使用 Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 
+// 防重复提交存储 - 基于内容指纹
+const duplicateSubmissionMap = new Map<string, { timestamp: number; ip: string }>()
+
 // 清理过期的限流记录
 const cleanupRateLimit = () => {
   const now = Date.now()
@@ -13,6 +16,46 @@ const cleanupRateLimit = () => {
       rateLimitMap.delete(key)
     }
   }
+}
+
+// 清理过期的防重复提交记录
+const cleanupDuplicateSubmissions = () => {
+  const now = Date.now()
+  const expirationTime = 5 * 60 * 1000 // 5分钟过期
+  
+  for (const [key, value] of duplicateSubmissionMap.entries()) {
+    if (now - value.timestamp > expirationTime) {
+      duplicateSubmissionMap.delete(key)
+    }
+  }
+}
+
+// 生成提交指纹
+const generateSubmissionFingerprint = (title: string, url: string, description: string): string => {
+  return `${title.toLowerCase().trim()}_${url.toLowerCase().trim()}_${description.toLowerCase().trim().slice(0, 100)}`
+}
+
+// 检查重复提交
+const checkDuplicateSubmission = (fingerprint: string): { isDuplicate: boolean; remainingTime?: number } => {
+  cleanupDuplicateSubmissions()
+  
+  const existing = duplicateSubmissionMap.get(fingerprint)
+  if (!existing) {
+    return { isDuplicate: false }
+  }
+  
+  const now = Date.now()
+  const timeSinceSubmission = now - existing.timestamp
+  const cooldownTime = 5 * 60 * 1000 // 5分钟冷却时间
+  
+  if (timeSinceSubmission < cooldownTime) {
+    return { 
+      isDuplicate: true, 
+      remainingTime: Math.ceil((cooldownTime - timeSinceSubmission) / 1000)
+    }
+  }
+  
+  return { isDuplicate: false }
 }
 
 // 检查频率限制
@@ -150,6 +193,21 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // 生成内容指纹用于防重复提交
+    const contentFingerprint = generateSubmissionFingerprint(cleanTitle, url, cleanDescription)
+    
+    // 检查重复提交
+    const duplicateCheck = checkDuplicateSubmission(contentFingerprint)
+    if (duplicateCheck.isDuplicate) {
+      return NextResponse.json(
+        { 
+          error: `相似内容已经提交，请等待 ${duplicateCheck.remainingTime} 秒后再试`,
+          remainingTime: duplicateCheck.remainingTime
+        },
+        { status: 429 }
+      )
+    }
+    
     // 检查重复提交（相同标题和URL）
     const { data: existing } = await supabaseAdmin
       .from('submissions')
@@ -186,6 +244,12 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+    
+    // 记录成功提交的指纹，防止短时间内重复提交
+    duplicateSubmissionMap.set(contentFingerprint, {
+      timestamp: Date.now(),
+      ip: clientIP
+    })
     
     // 发送邮件通知管理员（异步，不阻塞响应）
     if (process.env.ADMIN_EMAIL && process.env.RESEND_API_KEY) {

@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { servicesConfig } from '@/data/services'
-import { Loader2, Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { Loader2, Send, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { useDebouncedSubmit } from '@/hooks/useDebounce'
 
 interface SubmissionFormProps {
   isOpen: boolean
@@ -24,9 +25,10 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
   })
   
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error' | 'debouncing'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [mathChallenge, setMathChallenge] = useState({ a: 0, b: 0, answer: '' })
+  const [lastSubmitAttempt, setLastSubmitAttempt] = useState<number>(0)
 
   // 生成简单的数学验证
   const generateMathChallenge = () => {
@@ -41,7 +43,7 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
   })
 
   // 表单重置
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       category: '',
       title: '',
@@ -52,45 +54,49 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
     setSubmitStatus('idle')
     setErrorMessage('')
     generateMathChallenge()
-  }
+  }, [generateMathChallenge])
 
-  // 处理表单提交
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 实际的提交逻辑
+  const performSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setSubmitStatus('idle')
     setErrorMessage('')
 
-    // 验证数学题
-    if (parseInt(mathChallenge.answer) !== mathChallenge.a + mathChallenge.b) {
-      setErrorMessage('数学验证错误，请重新计算')
-      setIsSubmitting(false)
-      return
-    }
-
-    // 基础验证
-    if (!formData.category || !formData.title || !formData.description || !formData.url) {
-      setErrorMessage('请填写所有必填字段')
-      setIsSubmitting(false)
-      return
-    }
-
-    // URL 验证
     try {
-      new URL(formData.url)
-    } catch {
-      setErrorMessage('请输入有效的 URL 地址')
-      setIsSubmitting(false)
-      return
-    }
+      // 验证数学题
+      if (parseInt(mathChallenge.answer) !== mathChallenge.a + mathChallenge.b) {
+        setErrorMessage('数学验证错误，请重新计算')
+        return
+      }
 
-    try {
+      // 基础验证
+      if (!formData.category || !formData.title || !formData.description || !formData.url) {
+        setErrorMessage('请填写所有必填字段')
+        return
+      }
+
+      // URL 验证
+      try {
+        new URL(formData.url)
+      } catch {
+        setErrorMessage('请输入有效的 URL 地址')
+        return
+      }
+
+      // 添加提交时间戳和指纹
+      const submitData = {
+        ...formData,
+        submitTimestamp: Date.now(),
+        submitFingerprint: `${formData.title}_${formData.url}_${Date.now()}`
+      }
+
       const response = await fetch('/api/submissions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       const result = await response.json()
@@ -111,7 +117,37 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
     } finally {
       setIsSubmitting(false)
     }
-  }
+  }, [formData, mathChallenge.answer, mathChallenge.a, mathChallenge.b, onOpenChange, resetForm])
+
+  // 使用防抖提交
+  const { debouncedSubmit } = useDebouncedSubmit(
+    performSubmit,
+    2000 // 2秒防抖间隔
+  )
+
+  // 处理表单提交
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    const now = Date.now()
+    
+    // 检查是否在短时间内重复点击
+    if (now - lastSubmitAttempt < 2000) {
+      setSubmitStatus('debouncing')
+      setErrorMessage(`请等待 ${Math.ceil((2000 - (now - lastSubmitAttempt)) / 1000)} 秒后再次提交`)
+      
+      // 清除防抖提示
+      setTimeout(() => {
+        if (submitStatus === 'debouncing') {
+          setSubmitStatus('idle')
+          setErrorMessage('')
+        }
+      }, 2000 - (now - lastSubmitAttempt))
+      
+      return
+    }
+
+    setLastSubmitAttempt(now)
+    debouncedSubmit(e)
+  }, [lastSubmitAttempt, debouncedSubmit, submitStatus])
 
   // 获取可用的分类
   const availableCategories = servicesConfig.categories.map(cat => cat.name)
@@ -231,10 +267,18 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
               </div>
             </div>
 
-            {/* 错误信息 */}
+            {/* 错误信息和状态提示 */}
             {errorMessage && (
-              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-                <AlertCircle className="h-4 w-4" />
+              <div className={`flex items-center space-x-2 p-3 rounded-lg ${
+                submitStatus === 'debouncing' 
+                  ? 'text-amber-600 bg-amber-50' 
+                  : 'text-red-600 bg-red-50'
+              }`}>
+                {submitStatus === 'debouncing' ? (
+                  <Clock className="h-4 w-4" />
+                ) : (
+                  <AlertCircle className="h-4 w-4" />
+                )}
                 <span className="text-sm">{errorMessage}</span>
               </div>
             )}
@@ -251,13 +295,22 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="bg-slate-900 hover:bg-slate-800 text-white"
+                disabled={isSubmitting || submitStatus === 'debouncing'}
+                className={`text-white ${
+                  submitStatus === 'debouncing' 
+                    ? 'bg-amber-600 hover:bg-amber-700' 
+                    : 'bg-slate-900 hover:bg-slate-800'
+                }`}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     提交中...
+                  </>
+                ) : submitStatus === 'debouncing' ? (
+                  <>
+                    <Clock className="h-4 w-4 mr-2" />
+                    请等待...
                   </>
                 ) : (
                   <>

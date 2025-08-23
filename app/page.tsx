@@ -7,14 +7,16 @@ import { Input } from "@/components/ui/input"
 import { AuthDialog } from "@/components/auth-dialog"
 import { SubmissionForm } from "@/components/SubmissionForm"
 import { ServicesGrid } from "@/components/ServicesGrid"
-import { servicesConfig } from "@/data/services"
-import { Service } from "@/types/services"
+import { getCategoriesWithServices } from "@/lib/services-data"
+import { Service, CategoryConfig } from "@/types/services"
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [servicesConfig, setServicesConfig] = useState<CategoryConfig>({ categories: [] })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // 自动触发认证对话框
@@ -22,6 +24,24 @@ export default function HomePage() {
       setShowAuthDialog(true)
     }
   }, [isAuthenticated])
+
+  // 加载服务数据
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        setLoading(true)
+        const data = await getCategoriesWithServices()
+        setServicesConfig(data)
+      } catch (error) {
+        console.error('加载服务数据失败:', error)
+        // 保持空数据，不影响用户体验
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadServices()
+  }, [])
 
   // 认证成功回调
   const handleAuthSuccess = () => {
@@ -111,7 +131,12 @@ export default function HomePage() {
 
 
         {/* Services Content */}
-        {!isAuthenticated ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+            <span className="ml-3 text-slate-600">加载服务数据...</span>
+          </div>
+        ) : !isAuthenticated ? (
           <div className="relative">
             {/* 模糊内容背景 */}
             <div className="filter blur-sm pointer-events-none">
