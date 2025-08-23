@@ -32,7 +32,7 @@
       ],
       "hints": [
         "提示：STFW(Search The Fucking Web)",
-        "提示：第一个字是'忠'，最后一个字是'敬'"
+        "提示：忠信笃敬"
       ],
       "errorMessages": [
         "我也记不得了",
@@ -43,16 +43,21 @@
       "id": "text_question_3",
       "type": "text",
       "question": "番禺校区南门那个很像树的雕像被戏称为 什么树？",
-      "answers": ["挂科树", "挂科"],
-      "hints": [  
-        "提示：期末你不希望?.."
+      "answers": [
+        "挂科树",
+        "挂科"
+      ],
+      "hints": [
+        "提示：期末你不希望?..",
+        "提示：当然是不希望挂*啦?..",
+        "提示：当然是不希望挂科啦"
       ],
       "errorMessages": [
-        "不知道正常, ",
-        "挂树？"
+        "不知道正常, 希望你别**",
+        "这么提示还答不对啊？",
+        "I have told you the answer"
       ]
     }
-
   ],
   "config": {
     "maxAttempts": 3,
