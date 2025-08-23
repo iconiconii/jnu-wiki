@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendEmail, generateSubmissionNotificationEmail } from '@/lib/email'
 
 // Rate limiting storage (在生产环境中应该使用 Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -186,6 +187,27 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // 发送邮件通知管理员（异步，不阻塞响应）
+    if (process.env.ADMIN_EMAIL && process.env.RESEND_API_KEY) {
+      const emailHtml = generateSubmissionNotificationEmail({
+        title: cleanTitle,
+        description: cleanDescription,
+        url: url,
+        category: category,
+        submittedBy: cleanSubmittedBy || undefined,
+        createdAt: data.created_at
+      })
+
+      // 异步发送邮件，不等待结果
+      sendEmail({
+        to: process.env.ADMIN_EMAIL,
+        subject: `新投稿提醒 - ${cleanTitle}`,
+        html: emailHtml
+      }).catch(error => {
+        console.error('邮件发送失败:', error)
+      })
+    }
+
     // 返回成功响应
     return NextResponse.json({
       success: true,
