@@ -1,17 +1,16 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { 
   Plus, 
   Edit, 
-  Trash2, 
-  Eye,
+  Trash2,
   Save,
   X,
   Loader2,
@@ -20,10 +19,10 @@ import {
   Grid3X3
 } from 'lucide-react'
 import { DatabaseCategory, CreateCategoryRequest, UpdateCategoryRequest } from '@/types/services'
+import { useRouter } from 'next/navigation'
 
 export default function CategoriesManagePage() {
-  const [adminKey, setAdminKey] = useState('')
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter()
   const [categories, setCategories] = useState<DatabaseCategory[]>([])
   const [loading, setLoading] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
@@ -37,89 +36,104 @@ export default function CategoriesManagePage() {
     sort_order: 0
   })
 
-  // 认证检查
-  const handleAuth = () => {
-    if (adminKey === process.env.NEXT_PUBLIC_ADMIN_DEMO_KEY || adminKey) {
-      setIsAuthenticated(true)
-      loadCategories()
+  // 使用认证的API请求
+  const authenticatedRequest = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('admin_token')
+    
+    if (!token) {
+      throw new Error('未认证')
+    }
+
+    const headers = new Headers(options.headers)
+    headers.set('Authorization', `Bearer ${token}`)
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: '服务器错误' }))
+        throw new Error(errorData.error || '请求失败')
+      }
+
+      return response.json()
+    } catch (error) {
+      console.error('Authenticated request error:', error)
+      throw error
     }
   }
 
   // 加载分类列表
-  const loadCategories = async () => {
-    if (!isAuthenticated || !adminKey) return
-    
+  const loadCategories = useCallback(async () => {
+    console.log('Loading categories...')
     setLoading(true)
     try {
-      const response = await fetch(`/api/categories?admin_key=${adminKey}&include_services=true`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        setCategories(data.categories)
-      }
+      const data = await authenticatedRequest('/api/categories?include_services=true')
+      console.log('Categories loaded successfully:', data)
+      setCategories(data.categories)
     } catch (error) {
       console.error('Load categories error:', error)
+      // 如果认证失败，跳转到登录页
+      if (error instanceof Error && (error.message.includes('未认证') || error.message.includes('认证失败'))) {
+        router.push('/admin/login')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  // 检查认证状态
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      router.push('/admin/login')
+      return
+    }
+    loadCategories()
+  }, [router, loadCategories])
 
   // 创建或更新分类
   const handleSave = async () => {
-    if (!adminKey) return
-    
     try {
-      const url = editingCategory 
-        ? `/api/categories?admin_key=${adminKey}`
-        : `/api/categories?admin_key=${adminKey}`
-      
-      const payload = editingCategory 
-        ? { id: editingCategory.id, ...formData } as UpdateCategoryRequest
-        : formData as CreateCategoryRequest
-
-      const response = await fetch(url, {
-        method: editingCategory ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (response.ok) {
-        loadCategories()
-        handleCloseDialog()
+      if (editingCategory) {
+        const payload = { id: editingCategory.id, ...formData } as UpdateCategoryRequest
+        await authenticatedRequest('/api/categories', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
       } else {
-        const errorData = await response.json()
-        alert(errorData.error || '操作失败')
+        await authenticatedRequest('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        })
       }
+      
+      loadCategories()
+      handleCloseDialog()
     } catch (error) {
       console.error('Save category error:', error)
-      alert('保存失败')
+      alert(error.message || '保存失败')
     }
   }
 
   // 删除分类
   const handleDelete = async (category: DatabaseCategory) => {
-    if (!adminKey) return
-    
     if (!confirm(`确定要删除分类"${category.name}"吗？`)) {
       return
     }
     
     try {
-      const response = await fetch(`/api/categories?admin_key=${adminKey}&id=${category.id}`, {
+      await authenticatedRequest(`/api/categories?id=${category.id}`, {
         method: 'DELETE',
       })
-
-      if (response.ok) {
-        loadCategories()
-      } else {
-        const errorData = await response.json()
-        alert(errorData.error || '删除失败')
-      }
+      loadCategories()
     } catch (error) {
       console.error('Delete category error:', error)
-      alert('删除失败')
+      alert(error.message || '删除失败')
     }
   }
 
@@ -157,40 +171,11 @@ export default function CategoriesManagePage() {
     setEditingCategory(null)
   }
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadCategories()
-    }
-  }, [isAuthenticated])
-
-  // 未认证界面
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>分类管理系统</CardTitle>
-            <CardDescription>请输入管理员密钥访问</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="admin-key">管理员密钥</Label>
-              <Input
-                id="admin-key"
-                type="password"
-                placeholder="请输入管理员密钥"
-                value={adminKey}
-                onChange={(e) => setAdminKey(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAuth()}
-              />
-            </div>
-            <Button onClick={handleAuth} className="w-full bg-slate-900 hover:bg-slate-800">
-              登录
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
+  // 注销功能
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_user')
+    router.push('/admin/login')
   }
 
   return (
@@ -214,6 +199,13 @@ export default function CategoriesManagePage() {
               <Button onClick={handleCreate}>
                 <Plus className="h-4 w-4 mr-2" />
                 新建分类
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+              >
+                注销
               </Button>
             </div>
           </div>

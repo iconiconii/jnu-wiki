@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { CreateCategoryRequest, UpdateCategoryRequest } from '@/types/services'
+import { SimpleAdminAuth } from '@/lib/simple-auth'
 
 // 获取所有分类
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const adminKey = searchParams.get('admin_key')
-    
     // 验证管理员权限
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
-      )
+    const authResult = SimpleAdminAuth.verifyToken(request)
+    
+    if (!authResult.isValid) {
+      return SimpleAdminAuth.createUnauthorizedResponse(authResult.error)
     }
 
+    const { searchParams } = new URL(request.url)
     const includeServices = searchParams.get('include_services') === 'true'
     
-    let query = supabaseAdmin
+    const query = supabaseAdmin
       .from('categories')
       .select(includeServices ? '*, services(*)' : '*')
       .order('sort_order', { ascending: true })
@@ -51,15 +49,11 @@ export async function GET(request: NextRequest) {
 // 创建分类
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const adminKey = searchParams.get('admin_key')
-    
     // 验证管理员权限
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
-      )
+    const authResult = SimpleAdminAuth.verifyToken(request)
+    
+    if (!authResult.isValid) {
+      return SimpleAdminAuth.createUnauthorizedResponse(authResult.error)
     }
 
     const body: CreateCategoryRequest = await request.json()
@@ -126,15 +120,11 @@ export async function POST(request: NextRequest) {
 // 更新分类
 export async function PUT(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const adminKey = searchParams.get('admin_key')
-    
     // 验证管理员权限
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
-      )
+    const authResult = SimpleAdminAuth.verifyToken(request)
+    
+    if (!authResult.isValid) {
+      return SimpleAdminAuth.createUnauthorizedResponse(authResult.error)
     }
 
     const body: UpdateCategoryRequest = await request.json()
@@ -166,7 +156,7 @@ export async function PUT(request: NextRequest) {
 
     // 清理更新数据
     const cleanUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([_, value]) => value !== undefined)
+      Object.entries(updates).filter(([, value]) => value !== undefined)
     )
 
     if (cleanUpdates.name) {
@@ -205,17 +195,15 @@ export async function PUT(request: NextRequest) {
 // 删除分类
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const adminKey = searchParams.get('admin_key')
-    const categoryId = searchParams.get('id')
-    
     // 验证管理员权限
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
-      )
+    const authResult = SimpleAdminAuth.verifyToken(request)
+    
+    if (!authResult.isValid) {
+      return SimpleAdminAuth.createUnauthorizedResponse(authResult.error)
     }
+
+    const { searchParams } = new URL(request.url)
+    const categoryId = searchParams.get('id')
 
     if (!categoryId) {
       return NextResponse.json(
