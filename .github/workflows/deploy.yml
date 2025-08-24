@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+  statuses: write
+  pull-requests: write
+  issues: write
+
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -89,6 +95,8 @@ jobs:
     needs: test-and-build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    outputs:
+      deployment-url: ${{ steps.deploy.outputs.url }}
     
     steps:
       - name: Checkout code
@@ -140,9 +148,13 @@ jobs:
         
       - name: Health check
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://your-domain.vercel.app/api/submissions)
+          # 等待DNS传播
+          sleep 10
+          deployment_url="${{ needs.deploy-production.outputs.deployment-url }}"
+          echo "Testing deployment at: $deployment_url"
+          response=$(curl -s -o /dev/null -w "%{http_code}" "$deployment_url/api/submissions")
           if [ $response -eq 200 ] || [ $response -eq 405 ]; then
-            echo "✅ Health check passed"
+            echo "✅ Health check passed (Status: $response)"
           else
             echo "❌ Health check failed with status: $response"
             exit 1
