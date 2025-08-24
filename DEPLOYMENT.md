@@ -40,11 +40,22 @@
    在 Vercel Dashboard → Settings → Environment Variables 添加：
 
    ```bash
-   # 生产环境变量
+   # 数据库配置
    NEXT_PUBLIC_SUPABASE_URL=https://your-prod-id.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
+   
+   # 认证配置 (新增JWT认证系统)
    ADMIN_SECRET_KEY=YourSuperSecureProductionAdminKey2024!
+   JWT_SECRET=your-super-secure-jwt-secret-key-2024
+   
+   # 邮件通知配置 (新增Resend邮件服务)
+   RESEND_API_KEY=re_your_resend_api_key_here
+   ADMIN_EMAIL=your-admin@example.com
+   EMAIL_FROM=JNU Wiki <noreply@yourdomain.com>
+   NEXT_PUBLIC_SITE_URL=https://your-domain.vercel.app
+   
+   # 频率限制和防抖配置
    RATE_LIMIT_MAX_REQUESTS=2
    RATE_LIMIT_WINDOW_MS=1800000
    ```
@@ -75,6 +86,10 @@ VERCEL_PROJECT_ID=your_project_id
 # 可选：通知集成
 DISCORD_WEBHOOK=your_discord_webhook_url
 SLACK_WEBHOOK=your_slack_webhook_url
+
+# 新增：邮件服务密钥 (与Vercel环境变量同步)
+RESEND_API_KEY=re_your_resend_api_key_here
+JWT_SECRET=your-super-secure-jwt-secret-key-2024
 ```
 
 **获取 Vercel Token**：
@@ -116,6 +131,25 @@ SLACK_WEBHOOK=your_slack_webhook_url
 curl https://your-domain.vercel.app/api/submissions
 
 # 预期响应: 405 Method Not Allowed (正常)
+
+# 邮件服务测试
+curl -X POST https://your-domain.vercel.app/api/submissions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": "test",
+    "title": "部署测试",
+    "description": "验证邮件通知功能",
+    "url": "https://example.com"
+  }'
+
+# 预期结果: 成功提交且管理员收到邮件通知
+
+# JWT认证测试
+curl https://your-domain.vercel.app/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"answer": "correct_answer_for_auth_question"}'
+
+# 预期响应: JWT token 或认证错误
 ```
 
 #### 手动验证清单
@@ -124,6 +158,10 @@ curl https://your-domain.vercel.app/api/submissions
 - [ ] 管理员页面可访问
 - [ ] 数据库连接正常
 - [ ] 环境变量配置正确
+- [ ] 新增JWT认证系统正常工作
+- [ ] 邮件通知功能正常发送
+- [ ] 防抖系统有效防止重复提交
+- [ ] 校园问题验证系统工作正常
 
 ### 7. 监控和维护
 
@@ -183,6 +221,49 @@ curl -X POST http://localhost:3000/api/submissions \
 - 检查 Supabase 项目状态
 - 验证 RLS 策略配置
 - 确认 API 密钥有效性
+
+**5. 邮件通知问题**
+```bash
+# 检查Resend API状态
+curl -X GET https://api.resend.com/emails \
+  -H "Authorization: Bearer YOUR_RESEND_API_KEY"
+
+# 验证环境变量
+echo $RESEND_API_KEY
+echo $ADMIN_EMAIL
+```
+- 确认Resend API密钥有效
+- 检查发送域名验证状态
+- 验证收件人邮箱格式
+
+**6. JWT认证问题**
+```bash
+# 验证JWT密钥配置
+echo $JWT_SECRET
+
+# 测试认证问题
+curl https://your-domain.vercel.app/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"answer": "测试答案"}'
+```
+- 确认JWT_SECRET环境变量设置
+- 检查auth-config.json问题配置
+- 验证bcryptjs和jsonwebtoken依赖
+
+**7. 防抖系统问题**
+```bash
+# 测试防抖功能
+# 快速连续提交相同内容
+for i in {1..3}; do
+  curl -X POST https://your-domain.vercel.app/api/submissions \
+    -H "Content-Type: application/json" \
+    -d '{"category":"test","title":"防抖测试","description":"测试防重复提交","url":"https://test.com"}'
+  echo "第${i}次提交"
+done
+```
+- 第一次提交应该成功
+- 后续提交应返回429状态码
+- 检查防抖时间配置(5分钟冷却期)
 
 #### 回滚策略
 ```bash
@@ -267,9 +348,58 @@ vercel env rm
 vercel rollback
 ```
 
+## 🆕 新功能说明
+
+### 最近更新的功能 (2024-08-23)
+
+#### 1. JWT认证系统升级
+- **替换原有简单密钥认证**为完整的JWT令牌系统
+- **新增管理员登录页面** (`/admin/login`)
+- **校园问题验证**：包含3个暨南大学相关问题
+- **安全增强**：使用bcryptjs和jsonwebtoken
+
+#### 2. 邮件通知系统
+- **集成Resend邮件服务**，支持自动邮件通知
+- **新投稿提醒**：用户提交后自动通知管理员  
+- **专业邮件模板**：响应式HTML设计
+- **详细配置文档**：参考`EMAIL_SETUP.md`
+
+#### 3. 防抖防刷系统
+- **前端防抖**：2秒内禁止重复提交，带视觉反馈
+- **后端防重**：相同内容5分钟冷却期
+- **频率限制**：IP级别15分钟内最多5次提交
+- **智能去重**：基于内容指纹的防重复机制
+
+#### 4. 配置文件更新
+- **auth-config.json**：新增校园特色认证问题
+- **环境变量扩展**：支持邮件、JWT等新配置
+- **测试文档**：完整的功能测试指南
+
+### 部署注意事项
+
+**必需的新环境变量**：
+```bash
+# JWT认证 (必需)
+JWT_SECRET=your-super-secure-jwt-secret-key-2024
+
+# 邮件通知 (推荐)
+RESEND_API_KEY=re_your_resend_api_key_here
+ADMIN_EMAIL=your-admin@example.com
+EMAIL_FROM=JNU Wiki <noreply@yourdomain.com>
+```
+
+**新依赖包**：
+- `bcryptjs`: 密码哈希处理
+- `jsonwebtoken`: JWT令牌生成和验证
+- `resend`: 邮件服务API客户端
+
+---
+
 ## 📞 支持联系
 
 如果遇到部署问题：
 1. 查看 Vercel Dashboard 日志
 2. 检查 GitHub Actions 执行状态
 3. 参考本文档故障排除部分
+4. 检查新功能相关的环境变量配置
+5. 查看`EMAIL_SETUP.md`和`test-debounce.md`详细文档

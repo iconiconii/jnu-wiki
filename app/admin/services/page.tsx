@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,7 +18,6 @@ import {
   ArrowLeft,
   Star,
   Search,
-  Filter,
   Grid3X3
 } from 'lucide-react'
 import { DatabaseService, DatabaseCategory, CreateServiceRequest, UpdateServiceRequest } from '@/types/services'
@@ -55,7 +54,7 @@ export default function ServicesManagePage() {
   }
 
   // 加载数据
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!isAuthenticated || !adminKey) return
     
     setLoading(true)
@@ -80,7 +79,7 @@ export default function ServicesManagePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAuthenticated, adminKey])
 
   // 创建或更新服务
   const handleSave = async () => {
@@ -201,7 +200,7 @@ export default function ServicesManagePage() {
     if (isAuthenticated) {
       loadData()
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, loadData])
 
   // 未认证界面
   if (!isAuthenticated) {
@@ -344,9 +343,9 @@ export default function ServicesManagePage() {
                             </Badge>
                           )}
                           <Badge 
-                            variant={service.status === 'active' ? 'default' : service.status === 'pending' ? 'secondary' : 'outline'}
+                            variant={service.status === 'active' ? 'default' : 'outline'}
                           >
-                            {service.status === 'active' ? '活跃' : service.status === 'pending' ? '待审核' : '停用'}
+                            {service.status === 'active' ? '活跃' : service.status === 'coming-soon' ? '即将上线' : '维护中'}
                           </Badge>
                           {category && (
                             <Badge variant="secondary">
@@ -453,11 +452,11 @@ export default function ServicesManagePage() {
                   id="status"
                   className="w-full px-3 py-2 border border-slate-200 rounded-md"
                   value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'coming-soon' | 'maintenance' }))}
                 >
                   <option value="active">活跃</option>
-                  <option value="inactive">停用</option>
-                  <option value="pending">待审核</option>
+                  <option value="coming-soon">即将上线</option>
+                  <option value="maintenance">维护中</option>
                 </select>
               </div>
             </div>
@@ -511,7 +510,7 @@ export default function ServicesManagePage() {
               <Input
                 id="tags"
                 placeholder="学习,工具,资源"
-                value={formData.tags.join(', ')}
+                value={formData.tags?.join(', ') || ''}
                 onChange={(e) => handleTagsChange(e.target.value)}
               />
             </div>

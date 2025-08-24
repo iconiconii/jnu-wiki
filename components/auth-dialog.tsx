@@ -161,6 +161,7 @@ export function AuthDialog({ isOpen, onOpenChange, onAuthSuccess, onAuthFailed, 
             <div className="p-3 bg-muted rounded-md">
               {currentQuestion.type === 'image' ? (
                 <div className="space-y-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
                     src={currentQuestion.question} 
                     alt="验证图片" 

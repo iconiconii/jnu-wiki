@@ -116,7 +116,7 @@ export default function CategoriesManagePage() {
       handleCloseDialog()
     } catch (error) {
       console.error('Save category error:', error)
-      alert(error.message || '保存失败')
+      alert(error instanceof Error ? error.message : '保存失败')
     }
   }
 
@@ -133,7 +133,7 @@ export default function CategoriesManagePage() {
       loadCategories()
     } catch (error) {
       console.error('Delete category error:', error)
-      alert(error.message || '删除失败')
+      alert(error instanceof Error ? error.message : '删除失败')
     }
   }
 

@@ -31,11 +31,11 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
   const [lastSubmitAttempt, setLastSubmitAttempt] = useState<number>(0)
 
   // 生成简单的数学验证
-  const generateMathChallenge = () => {
+  const generateMathChallenge = useCallback(() => {
     const a = Math.floor(Math.random() * 10) + 1
     const b = Math.floor(Math.random() * 10) + 1
     setMathChallenge({ a, b, answer: '' })
-  }
+  }, [])
 
   // 初始化数学验证
   useState(() => {

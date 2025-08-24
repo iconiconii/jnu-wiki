@@ -159,7 +159,7 @@ export async function PUT(request: NextRequest) {
       Object.entries(updates).filter(([, value]) => value !== undefined)
     )
 
-    if (cleanUpdates.name) {
+    if (cleanUpdates.name && typeof cleanUpdates.name === 'string') {
       cleanUpdates.name = cleanUpdates.name.trim()
     }
 

@@ -219,20 +219,23 @@ export async function PUT(request: NextRequest) {
 
     // 清理更新数据
     const cleanUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([_, value]) => value !== undefined)
+      Object.entries(updates).filter(([, value]) => value !== undefined)
     )
 
-    if (cleanUpdates.title) {
+    if (cleanUpdates.title && typeof cleanUpdates.title === 'string') {
       cleanUpdates.title = cleanUpdates.title.trim()
     }
-    if (cleanUpdates.description) {
-      cleanUpdates.description = cleanUpdates.description.trim() || null
+    if (cleanUpdates.description && typeof cleanUpdates.description === 'string') {
+      const trimmed = cleanUpdates.description.trim()
+      if (trimmed) cleanUpdates.description = trimmed
     }
-    if (cleanUpdates.href) {
-      cleanUpdates.href = cleanUpdates.href.trim() || null
+    if (cleanUpdates.href && typeof cleanUpdates.href === 'string') {
+      const trimmed = cleanUpdates.href.trim()
+      if (trimmed) cleanUpdates.href = trimmed
     }
-    if (cleanUpdates.image) {
-      cleanUpdates.image = cleanUpdates.image.trim() || null
+    if (cleanUpdates.image && typeof cleanUpdates.image === 'string') {
+      const trimmed = cleanUpdates.image.trim()
+      if (trimmed) cleanUpdates.image = trimmed
     }
 
     const { data, error } = await supabaseAdmin

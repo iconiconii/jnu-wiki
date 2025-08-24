@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
 // 测试数据库连接和基本查询
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 测试基本连接
     const { data: tables, error: tablesError } = await supabase
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Database test failed',
-      details: error.message
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 }
