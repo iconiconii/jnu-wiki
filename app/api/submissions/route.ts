@@ -1,6 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendEmail, generateSubmissionNotificationEmail } from '@/lib/email'
+import jwt from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-here'
+
+// JWT 验证函数
+const verifyJWT = (token: string): { valid: boolean; payload?: jwt.JwtPayload | string } => {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET)
+    return { valid: true, payload }
+  } catch {
+    return { valid: false }
+  }
+}
+
+// 验证管理员权限（支持两种方式：JWT token 或 admin_key）
+const verifyAdminAccess = (request: NextRequest): { authorized: boolean; error?: string } => {
+  // 首先检查 Authorization header 中的 JWT token
+  const authHeader = request.headers.get('Authorization')
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7)
+    const jwtResult = verifyJWT(token)
+    if (jwtResult.valid) {
+      return { authorized: true }
+    }
+  }
+
+  // 然后检查 URL 参数中的 admin_key（向后兼容）
+  const { searchParams } = new URL(request.url)
+  const adminKey = searchParams.get('admin_key')
+  if (adminKey === process.env.ADMIN_SECRET_KEY) {
+    return { authorized: true }
+  }
+
+  return { authorized: false, error: '无访问权限' }
+}
 
 // Rate limiting storage (在生产环境中应该使用 Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -291,16 +326,16 @@ export async function POST(request: NextRequest) {
 // GET 获取投稿列表（管理员用）
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const adminKey = searchParams.get('admin_key')
-    
     // 验证管理员权限
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
+    const authResult = verifyAdminAccess(request)
+    if (!authResult.authorized) {
       return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
+        { error: authResult.error || '认证失败' },
+        { status: 401 }
       )
     }
+
+    const { searchParams } = new URL(request.url)
     
     const status = searchParams.get('status') || 'all'
     const limit = parseInt(searchParams.get('limit') || '50')
@@ -345,14 +380,12 @@ export async function GET(request: NextRequest) {
 // PUT 更新投稿状态（管理员用）
 export async function PUT(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const adminKey = searchParams.get('admin_key')
-    
     // 验证管理员权限
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
+    const authResult = verifyAdminAccess(request)
+    if (!authResult.authorized) {
       return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
+        { error: authResult.error || '认证失败' },
+        { status: 401 }
       )
     }
     

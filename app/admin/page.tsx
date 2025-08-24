@@ -1,26 +1,25 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 import { 
   CheckCircle, 
   XCircle, 
   Clock, 
   ExternalLink, 
   Eye,
-  Shield,
   Loader2,
   RefreshCw
 } from 'lucide-react'
 import { Submission, SubmissionStats } from '@/lib/supabase'
 
 export default function AdminPage() {
-  const [adminKey, setAdminKey] = useState('')
+  const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [stats, setStats] = useState<SubmissionStats | null>(null)
@@ -28,41 +27,74 @@ export default function AdminPage() {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
 
-  // 认证检查
-  const handleAuth = () => {
-    if (adminKey === process.env.NEXT_PUBLIC_ADMIN_DEMO_KEY || adminKey) {
-      setIsAuthenticated(true)
-      loadSubmissions()
+  // 使用认证的API请求
+  const authenticatedRequest = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('admin_token')
+    
+    if (!token) {
+      throw new Error('未认证')
+    }
+
+    const headers = new Headers(options.headers)
+    headers.set('Authorization', `Bearer ${token}`)
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: '服务器错误' }))
+        throw new Error(errorData.error || '请求失败')
+      }
+
+      return response.json()
+    } catch (error) {
+      console.error('Authenticated request error:', error)
+      throw error
     }
   }
 
+  // 检查认证状态
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      router.push('/admin/login')
+      return
+    }
+    setIsAuthenticated(true)
+    loadSubmissions()
+  }, [router]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // 加载投稿列表
   const loadSubmissions = async () => {
-    if (!isAuthenticated || !adminKey) return
+    if (!isAuthenticated) return
     
     setLoading(true)
     try {
-      const statusParam = statusFilter === 'all' ? '' : `&status=${statusFilter}`
-      const response = await fetch(`/api/submissions?admin_key=${adminKey}${statusParam}`)
+      const statusParam = statusFilter === 'all' ? '' : `?status=${statusFilter}`
+      const data = await authenticatedRequest(`/api/submissions${statusParam}`)
       
-      if (response.ok) {
-        const data = await response.json()
-        setSubmissions(data.submissions)
-        
-        // 计算统计数据
-        const stats = data.submissions.reduce((acc: SubmissionStats, sub: Submission) => {
-          acc.total++
-          const status = sub.status || 'pending'
-          if (status === 'pending') acc.pending++
-          else if (status === 'approved') acc.approved++
-          else if (status === 'rejected') acc.rejected++
-          return acc
-        }, { total: 0, pending: 0, approved: 0, rejected: 0 })
-        
-        setStats(stats)
-      }
+      setSubmissions(data.submissions)
+      
+      // 计算统计数据
+      const stats = data.submissions.reduce((acc: SubmissionStats, sub: Submission) => {
+        acc.total++
+        const status = sub.status || 'pending'
+        if (status === 'pending') acc.pending++
+        else if (status === 'approved') acc.approved++
+        else if (status === 'rejected') acc.rejected++
+        return acc
+      }, { total: 0, pending: 0, approved: 0, rejected: 0 })
+      
+      setStats(stats)
     } catch (error) {
       console.error('Load submissions error:', error)
+      // 如果认证失败，跳转到登录页
+      if (error instanceof Error && (error.message.includes('未认证') || error.message.includes('认证失败'))) {
+        router.push('/admin/login')
+      }
     } finally {
       setLoading(false)
     }
@@ -70,10 +102,8 @@ export default function AdminPage() {
 
   // 更新投稿状态
   const updateSubmissionStatus = async (id: string, status: 'approved' | 'rejected') => {
-    if (!adminKey) return
-    
     try {
-      const response = await fetch(`/api/submissions?admin_key=${adminKey}`, {
+      await authenticatedRequest('/api/submissions', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -81,13 +111,12 @@ export default function AdminPage() {
         body: JSON.stringify({ id, status }),
       })
 
-      if (response.ok) {
-        // 重新加载列表
-        loadSubmissions()
-        setSelectedSubmission(null)
-      }
+      // 重新加载列表
+      loadSubmissions()
+      setSelectedSubmission(null)
     } catch (error) {
       console.error('Update status error:', error)
+      alert(error instanceof Error ? error.message : '更新失败')
     }
   }
 
@@ -119,37 +148,16 @@ export default function AdminPage() {
     if (isAuthenticated) {
       loadSubmissions()
     }
-  }, [isAuthenticated, statusFilter, adminKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, statusFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 未认证界面
+  // 未认证时显示加载状态
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="bg-slate-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Shield className="h-8 w-8 text-slate-600" />
-            </div>
-            <CardTitle>管理员登录</CardTitle>
-            <CardDescription>请输入管理员密钥访问审核系统</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="admin-key">管理员密钥</Label>
-              <Input
-                id="admin-key"
-                type="password"
-                placeholder="请输入管理员密钥"
-                value={adminKey}
-                onChange={(e) => setAdminKey(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAuth()}
-              />
-            </div>
-            <Button onClick={handleAuth} className="w-full bg-slate-900 hover:bg-slate-800">
-              登录
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">正在验证身份...</p>
+        </div>
       </div>
     )
   }
@@ -167,6 +175,13 @@ export default function AdminPage() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => router.push('/admin/categories')}
+              >
+                分类管理
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={loadSubmissions}
                 disabled={loading}
               >
@@ -180,7 +195,11 @@ export default function AdminPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsAuthenticated(false)}
+                onClick={() => {
+                  localStorage.removeItem('admin_token')
+                  localStorage.removeItem('admin_user')
+                  router.push('/admin/login')
+                }}
               >
                 退出
               </Button>

@@ -188,7 +188,7 @@ export default function CategoriesManagePage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.history.back()}
+                onClick={() => router.push('/admin')}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 返回

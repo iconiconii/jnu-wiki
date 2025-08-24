@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
         // 存储 token
         localStorage.setItem('admin_token', data.token)
         localStorage.setItem('admin_user', JSON.stringify(data.user))
-        router.push('/admin/categories')
+        router.push('/admin')
       } else {
         setError(data.error || '登录失败')
       }
