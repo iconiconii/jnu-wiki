@@ -182,6 +182,13 @@ export default function AdminPage() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => router.push('/admin/feedback')}
+              >
+                反馈管理
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={loadSubmissions}
                 disabled={loading}
               >

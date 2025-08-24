@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { AuthDialog } from "@/components/auth-dialog"
 import { SubmissionForm } from "@/components/SubmissionForm"
 import { ServicesGrid } from "@/components/ServicesGrid"
+import { FeedbackButton } from "@/components/FeedbackButton"
 import { getCategoriesWithServices } from "@/lib/services-data"
 import { Service, CategoryConfig } from "@/types/services"
 
@@ -88,9 +89,12 @@ export default function HomePage() {
                 <a href="#" className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors">
                   学术资源
                 </a>
-                <a href="#" className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors">
-                  帮助支持
-                </a>
+                <button 
+                  onClick={() => {/* TODO: 打开反馈弹窗 */}} 
+                  className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors"
+                >
+                  意见反馈
+                </button>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
@@ -193,6 +197,9 @@ export default function HomePage() {
         isOpen={showSubmissionForm}
         onOpenChange={setShowSubmissionForm}
       />
+      
+      {/* 悬浮反馈按钮 */}
+      {isAuthenticated && <FeedbackButton />}
     </div>
   )
 }

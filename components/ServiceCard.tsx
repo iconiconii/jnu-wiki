@@ -39,13 +39,18 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
   const status = statusConfig[service.status || 'active']
   const isDisabled = service.status === 'maintenance'
 
+  const hasValidHref = service.href && service.href !== 'https://example.com' && service.href.trim() !== ''
+  
   const handleClick = () => {
     if (isDisabled) return
     
     if (onServiceAccess) {
       onServiceAccess(service)
-    } else if (service.href) {
+    } else if (hasValidHref) {
       window.open(service.href, '_blank', 'noopener,noreferrer')
+    } else {
+      // 没有有效链接时的处理
+      alert('该服务暂未配置访问链接，敬请期待！')
     }
   }
 
@@ -92,7 +97,7 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
           )}
           
           {/* External link indicator */}
-          {service.href && (
+          {hasValidHref && (
             <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full">
                 <ArrowUpRight className="w-4 h-4 text-gray-600" />
@@ -163,10 +168,15 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
               <Clock className="w-4 h-4 mr-2" />
               即将上线
             </>
-          ) : (
+          ) : hasValidHref ? (
             <>
               <ArrowUpRight className="w-4 h-4 mr-2" />
               访问服务
+            </>
+          ) : (
+            <>
+              <Clock className="w-4 h-4 mr-2" />
+              敬请期待
             </>
           )}
         </Button>
