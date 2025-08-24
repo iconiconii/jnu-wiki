@@ -107,14 +107,6 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-sm text-blue-800 mb-2">测试账户</h4>
-            <ul className="text-xs text-blue-600 space-y-1">
-              <li>• 用户名: admin</li>
-              <li>• 密码: Coolhao.12345</li>
-              <li>• 或使用邮箱: neverlookback20@163.com</li>
-            </ul>
-          </div>
         </CardContent>
       </Card>
     </div>
