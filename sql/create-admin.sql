@@ -1,4 +1,4 @@
--- 创建简单的管理员表
+-- 创建管理员表
 CREATE TABLE admins (
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
@@ -6,11 +6,10 @@ CREATE TABLE admins (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 插入管理员账户 (用户名: admin, 密码: Coolhao.12345)
--- 密码哈希是用 bcrypt 生成的
-INSERT INTO admins (username, password_hash) VALUES 
-('admin', '$2b$10$ved6mcbDeTkICcAU.blop.tPwfQ6p8dd2QsIYAhsC0.U4WOciX3ey');
+-- 示例管理员账户（请在实际使用时修改用户名和密码）
+-- 使用 bcrypt 生成密码哈希
+-- INSERT INTO admins (username, password_hash) VALUES 
+-- ('your_admin_username', 'your_bcrypt_hashed_password_here');
 
--- 或者使用邮箱作为用户名
-INSERT INTO admins (username, password_hash) VALUES 
-('neverlookback20@163.com', '$2b$10$ved6mcbDeTkICcAU.blop.tPwfQ6p8dd2QsIYAhsC0.U4WOciX3ey');
+-- 注意：请勿在生产环境中使用默认凭据
+-- 建议通过环境变量或安全的方式配置管理员账户
