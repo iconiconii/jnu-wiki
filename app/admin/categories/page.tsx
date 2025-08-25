@@ -36,6 +36,24 @@ export default function CategoriesManagePage() {
     sort_order: 0
   })
 
+  // 处理认证相关错误
+  const handleAuthError = (error: unknown) => {
+    if (error instanceof Error && (
+      error.message.includes('未认证') || 
+      error.message.includes('认证失败') ||
+      error.message.includes('无效的 token') ||
+      error.message.includes('token') ||
+      error.message.includes('Unauthorized')
+    )) {
+      // 清除本地存储的token
+      localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_user')
+      router.push('/admin/login')
+      return true
+    }
+    return false
+  }
+
   // 使用认证的API请求
   const authenticatedRequest = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('admin_token')
@@ -75,10 +93,12 @@ export default function CategoriesManagePage() {
       setCategories(data.categories)
     } catch (error) {
       console.error('Load categories error:', error)
-      // 如果认证失败，跳转到登录页
-      if (error instanceof Error && (error.message.includes('未认证') || error.message.includes('认证失败'))) {
-        router.push('/admin/login')
+      // 如果是认证错误，处理后直接返回
+      if (handleAuthError(error)) {
+        return
       }
+      // 其他错误可以在这里处理
+      console.error('非认证错误:', error)
     } finally {
       setLoading(false)
     }
@@ -116,6 +136,11 @@ export default function CategoriesManagePage() {
       handleCloseDialog()
     } catch (error) {
       console.error('Save category error:', error)
+      // 如果是认证错误，处理后直接返回
+      if (handleAuthError(error)) {
+        return
+      }
+      // 其他错误显示提示
       alert(error instanceof Error ? error.message : '保存失败')
     }
   }
@@ -133,6 +158,11 @@ export default function CategoriesManagePage() {
       loadCategories()
     } catch (error) {
       console.error('Delete category error:', error)
+      // 如果是认证错误，处理后直接返回
+      if (handleAuthError(error)) {
+        return
+      }
+      // 其他错误显示提示
       alert(error instanceof Error ? error.message : '删除失败')
     }
   }
