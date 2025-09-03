@@ -9,9 +9,17 @@ interface CategoryCardProps {
   category: ServiceCategory
   onClick?: () => void
   className?: string
+  showServiceCount?: boolean
+  showChildrenCount?: boolean
 }
 
-export function CategoryCard({ category, onClick, className }: CategoryCardProps) {
+export function CategoryCard({ 
+  category, 
+  onClick, 
+  className, 
+  showServiceCount = true,
+  showChildrenCount = false 
+}: CategoryCardProps) {
 
   return (
     <Card 
@@ -48,8 +56,36 @@ export function CategoryCard({ category, onClick, className }: CategoryCardProps
             </div>
           </div>
           <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-            <div className="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              {category.services.length} 项
+            <div className="flex items-center space-x-1">
+              {/* Type badge */}
+              {category.type && (
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "text-xs px-2 py-1",
+                    category.type === 'campus' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                    category.type === 'section' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                    'bg-green-50 text-green-700 border-green-200'
+                  )}
+                >
+                  {category.type === 'campus' ? '校区' : 
+                   category.type === 'section' ? '篇章' : '通用'}
+                </Badge>
+              )}
+              
+              {/* Children count */}
+              {showChildrenCount && category.children && category.children.length > 0 && (
+                <div className="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  {category.children.length} 个分类
+                </div>
+              )}
+              
+              {/* Service count */}
+              {showServiceCount && category.services.length > 0 && (
+                <div className="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  {category.services.length} 项
+                </div>
+              )}
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
           </div>
@@ -58,22 +94,58 @@ export function CategoryCard({ category, onClick, className }: CategoryCardProps
       
       <CardContent className="pt-0 px-6 pb-6">
         <div className="flex flex-wrap gap-2">
-          {category.services.slice(0, 4).map((service) => (
-            <Badge 
-              key={service.id}
-              variant="outline"
-              className="text-xs bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 transition-colors"
-            >
-              {service.title}
-            </Badge>
-          ))}
-          {category.services.length > 4 && (
-            <Badge 
-              variant="outline"
-              className="text-xs bg-gray-50 text-gray-500 border-gray-200"
-            >
-              +{category.services.length - 4} 更多
-            </Badge>
+          {/* Show services preview */}
+          {category.services && category.services.length > 0 && (
+            <>
+              {category.services.slice(0, 4).map((service) => (
+                <Badge 
+                  key={service.id}
+                  variant="outline"
+                  className="text-xs bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 transition-colors"
+                >
+                  {service.title}
+                </Badge>
+              ))}
+              {category.services.length > 4 && (
+                <Badge 
+                  variant="outline"
+                  className="text-xs bg-gray-50 text-gray-500 border-gray-200"
+                >
+                  +{category.services.length - 4} 更多
+                </Badge>
+              )}
+            </>
+          )}
+          
+          {/* Show children preview for campus categories */}
+          {category.children && category.children.length > 0 && (
+            <>
+              {category.children.slice(0, 3).map((child) => (
+                <Badge 
+                  key={child.id}
+                  variant="outline"
+                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                >
+                  {child.icon} {child.name}
+                </Badge>
+              ))}
+              {category.children.length > 3 && (
+                <Badge 
+                  variant="outline"
+                  className="text-xs bg-blue-50 text-blue-500 border-blue-200"
+                >
+                  +{category.children.length - 3} 个篇章
+                </Badge>
+              )}
+            </>
+          )}
+          
+          {/* Empty state */}
+          {(!category.services || category.services.length === 0) && 
+           (!category.children || category.children.length === 0) && (
+            <span className="text-xs text-gray-500 italic">
+              {category.type === 'campus' ? '暂无篇章' : '暂无服务'}
+            </span>
           )}
         </div>
       </CardContent>

@@ -166,6 +166,82 @@ export async function getFeaturedServices(limit: number = 6): Promise<DatabaseSe
   return data || []
 }
 
+// 新的层级结构数据获取函数
+export async function getHierarchicalCategories(): Promise<DatabaseCategory[]> {
+  try {
+    // 使用新的公共 API
+    const response = await fetch('/api/categories/public?tree=true')
+    
+    if (!response.ok) {
+      throw new Error('网络请求失败')
+    }
+    
+    const result = await response.json()
+    return result.categories || []
+  } catch (error) {
+    console.error('获取层级分类数据失败:', error)
+    // Fallback 到直接数据库查询
+    try {
+      const { data, error: supabaseError } = await supabase
+        .from('categories')
+        .select(`
+          *,
+          children:categories!parent_id(
+            *,
+            services(*)
+          ),
+          services(*)
+        `)
+        .is('parent_id', null)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true })
+
+      if (supabaseError) {
+        throw supabaseError
+      }
+
+      return data || []
+    } catch (fallbackError) {
+      console.error('Fallback 查询也失败:', fallbackError)
+      return []
+    }
+  }
+}
+
+// 获取特定类型的分类
+export async function getCategoriesByType(type: 'campus' | 'section' | 'general'): Promise<DatabaseCategory[]> {
+  try {
+    const response = await fetch(`/api/categories/public?type=${type}&include_services=true`)
+    
+    if (!response.ok) {
+      throw new Error('网络请求失败')
+    }
+    
+    const result = await response.json()
+    return result.categories || []
+  } catch (error) {
+    console.error(`获取${type}类型分类失败:`, error)
+    return []
+  }
+}
+
+// 获取校区的子分类
+export async function getCampusSections(campusId: string): Promise<DatabaseCategory[]> {
+  try {
+    const response = await fetch(`/api/categories/public?parent_id=${campusId}&include_services=true`)
+    
+    if (!response.ok) {
+      throw new Error('网络请求失败')
+    }
+    
+    const result = await response.json()
+    return result.categories || []
+  } catch (error) {
+    console.error('获取校区子分类失败:', error)
+    return []
+  }
+}
+
 // 获取服务统计信息
 export async function getServiceStats() {
   try {

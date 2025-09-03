@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input"
 import { AuthDialog } from "@/components/auth-dialog"
 import { SubmissionForm } from "@/components/SubmissionForm"
 import { ServicesGrid } from "@/components/ServicesGrid"
+import { HierarchicalServicesGrid } from "@/components/HierarchicalServicesGrid"
 import { FeedbackButton } from "@/components/FeedbackButton"
-import { getCategoriesWithServices } from "@/lib/services-data"
-import { Service, CategoryConfig } from "@/types/services"
+import { getCategoriesWithServices, getHierarchicalCategories } from "@/lib/services-data"
+import { Service, CategoryConfig, DatabaseCategory } from "@/types/services"
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -17,7 +18,9 @@ export default function HomePage() {
   const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [servicesConfig, setServicesConfig] = useState<CategoryConfig>({ categories: [] })
+  const [hierarchicalCategories, setHierarchicalCategories] = useState<DatabaseCategory[]>([])
   const [loading, setLoading] = useState(true)
+  const [useHierarchical, setUseHierarchical] = useState(true)
 
   useEffect(() => {
     // 自动触发认证对话框
@@ -31,18 +34,36 @@ export default function HomePage() {
     const loadServices = async () => {
       try {
         setLoading(true)
-        const data = await getCategoriesWithServices()
-        setServicesConfig(data)
+        
+        if (useHierarchical) {
+          // 加载新的层级结构数据
+          const hierarchicalData = await getHierarchicalCategories()
+          setHierarchicalCategories(hierarchicalData)
+        } else {
+          // 兼容性：加载旧的平均结构数据
+          const data = await getCategoriesWithServices()
+          setServicesConfig(data)
+        }
       } catch (error) {
         console.error('加载服务数据失败:', error)
-        // 保持空数据，不影响用户体验
+        // 失败时回退到旧版本
+        if (useHierarchical) {
+          console.log('回退到旧版本...')
+          setUseHierarchical(false)
+          try {
+            const fallbackData = await getCategoriesWithServices()
+            setServicesConfig(fallbackData)
+          } catch (fallbackError) {
+            console.error('回退也失败:', fallbackError)
+          }
+        }
       } finally {
         setLoading(false)
       }
     }
 
     loadServices()
-  }, [])
+  }, [useHierarchical])
 
   // 认证成功回调
   const handleAuthSuccess = () => {
@@ -172,8 +193,16 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        ) : useHierarchical ? (
+          // 已认证时显示新的层级结构
+          <HierarchicalServicesGrid
+            categories={hierarchicalCategories}
+            searchTerm={searchTerm}
+            onServiceAccess={handleServiceAccess}
+            defaultImage="/images/default-service.svg"
+          />
         ) : (
-          // 已认证时显示正常内容
+          // 回退方案：显示旧版本
           <ServicesGrid
             categories={servicesConfig.categories}
             searchTerm={searchTerm}
