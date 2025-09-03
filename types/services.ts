@@ -22,8 +22,13 @@ export interface DatabaseCategory {
   color: string
   featured: boolean
   sort_order: number
+  type: 'campus' | 'section' | 'general'
+  parent_id: string | null
+  level?: number
+  path?: string[]
   created_at: string
   updated_at: string
+  children?: DatabaseCategory[]
   services?: DatabaseService[]
 }
 
@@ -57,6 +62,10 @@ export interface ServiceCategory {
   icon: string
   description: string
   color: string
+  type?: 'campus' | 'section' | 'general'
+  parent_id?: string | null
+  level?: number
+  children?: ServiceCategory[]
   services: Service[]
   featured?: boolean
 }
@@ -71,6 +80,8 @@ export interface CreateCategoryRequest {
   icon?: string
   description?: string
   color?: string
+  type: 'campus' | 'section' | 'general'
+  parent_id?: string | null
   featured?: boolean
   sort_order?: number
 }
@@ -93,4 +104,38 @@ export interface CreateServiceRequest {
 
 export interface UpdateServiceRequest extends Partial<CreateServiceRequest> {
   id: string
+}
+
+// Hierarchy-related types
+export interface CategoryTree extends DatabaseCategory {
+  children: CategoryTree[]
+}
+
+export interface CategoryWithPath {
+  category: DatabaseCategory
+  path: DatabaseCategory[]
+  fullPath: string
+}
+
+// API query parameters
+export interface GetCategoriesParams {
+  type?: 'campus' | 'section' | 'general'
+  parent_id?: string | null
+  include_children?: boolean
+  include_services?: boolean
+}
+
+// Category hierarchy validation
+export interface CategoryValidation {
+  isValid: boolean
+  errors: string[]
+}
+
+// Statistics types
+export interface CategoryStats {
+  total_categories: number
+  campus_count: number
+  section_count: number
+  general_count: number
+  services_by_category: Record<string, number>
 }
