@@ -27,11 +27,14 @@ export default function CategoriesManagePage() {
   const [loading, setLoading] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
   const [editingCategory, setEditingCategory] = useState<DatabaseCategory | null>(null)
+  const [viewMode, setViewMode] = useState<'hierarchical' | 'flat'>('hierarchical')
   const [formData, setFormData] = useState<CreateCategoryRequest>({
     name: '',
     icon: '',
     description: '',
     color: 'blue',
+    type: 'general',
+    parent_id: null,
     featured: false,
     sort_order: 0
   })
@@ -243,8 +246,45 @@ export default function CategoriesManagePage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 分类列表 */}
-        <div className="space-y-4">
+        {/* View Mode Toggle */}
+        <div className="mb-6 flex justify-end">
+          <div className="flex rounded-lg border">
+            <Button
+              variant={viewMode === 'hierarchical' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('hierarchical')}
+              className="rounded-r-none"
+            >
+              <TreePine className="h-4 w-4 mr-2" />
+              层级视图
+            </Button>
+            <Button
+              variant={viewMode === 'flat' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('flat')}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4 mr-2" />
+              列表视图
+            </Button>
+          </div>
+        </div>
+
+        {/* Content */}
+        {viewMode === 'hierarchical' ? (
+          <HierarchicalCategoryManager
+            categories={categories}
+            onRefresh={loadCategories}
+            onAuthError={(error) => {
+              if (handleAuthError(error)) {
+                return
+              }
+              console.error('其他错误:', error)
+            }}
+          />
+        ) : (
+          /* 分类列表 */
+          <div className="space-y-4">
           {loading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -425,6 +465,8 @@ export default function CategoriesManagePage() {
           </div>
         </DialogContent>
       </Dialog>
+        )}
+      </main>
     </div>
   )
 }

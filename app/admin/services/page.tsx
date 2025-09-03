@@ -347,11 +347,9 @@ export default function ServicesManagePage() {
                           >
                             {service.status === 'active' ? '活跃' : service.status === 'coming-soon' ? '即将上线' : '维护中'}
                           </Badge>
-                          {category && (
-                            <Badge variant="secondary">
-                              {category.icon} {category.name}
-                            </Badge>
-                          )}
+                          <Badge variant="secondary" className="max-w-xs truncate">
+                            <CategoryPath categoryId={service.category_id} categories={categories} />
+                          </Badge>
                         </div>
                         
                         {service.description && (
@@ -432,18 +430,16 @@ export default function ServicesManagePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">所属分类 *</Label>
-                <select
-                  id="category"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-md"
-                  value={formData.category_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
-                >
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.icon} {category.name}
-                    </option>
-                  ))}
-                </select>
+                <CategorySelector
+                  categories={categories}
+                  selectedCategoryId={formData.category_id}
+                  onSelectCategory={(categoryId) => setFormData(prev => ({ ...prev, category_id: categoryId }))}
+                  placeholder="选择分类（校区不能直接关联服务）"
+                  className="text-sm"
+                />
+                <p className="text-xs text-gray-500">
+                  提示：服务应该关联到具体的篇章或通用分类，不能直接关联到校区
+                </p>
               </div>
 
               <div className="space-y-2">
