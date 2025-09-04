@@ -41,28 +41,28 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    // 构建查询
-    let query = supabase.from('categories')
-    
-    if (includeChildren && includeServices) {
-      query = query.select(`
+    // 构建查询（先 select 再追加过滤，避免不同 Builder 类型的重赋值）
+    const selectClause = includeChildren && includeServices
+      ? `
         *,
         children:categories!parent_id(
           *,
           services(*)
         ),
         services(*)
-      `)
-    } else if (includeChildren) {
-      query = query.select(`
+      `
+      : includeChildren
+        ? `
         *,
         children:categories!parent_id(*)
-      `)
-    } else if (includeServices) {
-      query = query.select('*, services(*)')
-    } else {
-      query = query.select('*')
-    }
+      `
+        : includeServices
+          ? '*, services(*)'
+          : '*'
+
+    let query = supabase
+      .from('categories')
+      .select(selectClause)
     
     // 添加筛选条件
     if (type) {
@@ -94,9 +94,11 @@ export async function GET(request: NextRequest) {
 
     // 如果是获取顶级分类且包含子级，构建完整的层级结构
     if (!parentId && !type && includeChildren) {
-      const topLevel = (data || []).filter(cat => !cat.parent_id)
+      type CatLike = { parent_id: string | null }
+      const rows = ((data || []) as unknown as CatLike[])
+      const topLevel = rows.filter(cat => !cat.parent_id)
       return NextResponse.json({
-        categories: topLevel,
+        categories: topLevel as unknown[],
         total: topLevel.length,
         structure: 'hierarchical'
       })
@@ -142,11 +144,13 @@ export async function POST(request: NextRequest) {
           .from('services')
           .select('category_id, categories!inner(type)')
           .then(({ data }) => {
-            type Row = { category_id: string; categories: { type: 'campus' | 'section' | 'general' } }
+            type TypeLiteral = 'campus' | 'section' | 'general'
+            type Row = { category_id: string; categories: { type: TypeLiteral } | { type: TypeLiteral }[] }
             const rows = (data || []) as Row[]
             return rows.reduce((acc, service) => {
-              const type = service.categories.type
-              acc[type] = (acc[type] || 0) + 1
+              const cat = service.categories
+              const t = Array.isArray(cat) ? cat[0]?.type : cat?.type
+              if (t) acc[t] = (acc[t] || 0) + 1
               return acc
             }, {} as Record<string, number>)
           })

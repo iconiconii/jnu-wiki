@@ -4,7 +4,7 @@ import { ChevronRight, Home } from 'lucide-react'
 import { DatabaseCategory } from '@/types/services'
 import { cn } from '@/lib/utils'
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   id: string
   name: string
   type: 'campus' | 'section' | 'general'

@@ -41,25 +41,25 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    // 构建查询
-    let query = supabaseAdmin.from('categories')
-    
-    if (includeChildren && includeServices) {
-      query = query.select(`
+    // 构建查询（先 select 再过滤，避免 Builder 类型不匹配）
+    const selectClause = includeChildren && includeServices
+      ? `
         *,
         children:categories!parent_id(*),
         services(*)
-      `)
-    } else if (includeChildren) {
-      query = query.select(`
+      `
+      : includeChildren
+        ? `
         *,
         children:categories!parent_id(*)
-      `)
-    } else if (includeServices) {
-      query = query.select('*, services(*)')
-    } else {
-      query = query.select('*')
-    }
+      `
+        : includeServices
+          ? '*, services(*)'
+          : '*'
+
+    let query = supabaseAdmin
+      .from('categories')
+      .select(selectClause)
     
     // 添加筛选条件
     if (type) {

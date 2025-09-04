@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { DatabaseCategory, Service } from '@/types/services'
+import { DatabaseCategory, DatabaseService, Service, ServiceCategory } from '@/types/services'
 import { CategoryCard } from './CategoryCard'
 import { ServiceCard } from './ServiceCard'
 import { BreadcrumbNav, BreadcrumbItem, buildBreadcrumbPath } from './BreadcrumbNav'
@@ -109,10 +109,21 @@ export function HierarchicalServicesGrid({
   }, [filteredCategories])
 
   // Get services for current category
+  const mapDbService = (s: DatabaseService): Service => ({
+    id: s.id,
+    title: s.title,
+    description: s.description || '',
+    tags: s.tags || [],
+    image: s.image || undefined,
+    href: s.href || undefined,
+    status: s.status,
+    featured: s.featured,
+  })
+
   const getCurrentServices = useMemo(() => {
     return (categoryId: string) => {
       const category = categories.find(cat => cat.id === categoryId)
-      return category?.services || []
+      return (category?.services || []).map(mapDbService)
     }
   }, [categories])
 
@@ -147,7 +158,7 @@ export function HierarchicalServicesGrid({
         
         matchingServices.forEach(service => {
           allServices.push({
-            ...service,
+            ...mapDbService(service),
             categoryPath: getCategoryPath(category)
           })
         })
@@ -402,10 +413,20 @@ export function HierarchicalServicesGrid({
                       icon: category.icon || '',
                       description: category.description || '',
                       color: category.color,
-                      services: category.services || [],
+                      services: (category.services || []).map(mapDbService),
                       type: category.type,
                       featured: category.featured,
-                      children: category.children
+                      children: (category.children || []).map((child): ServiceCategory => ({
+                        id: child.id,
+                        name: child.name,
+                        icon: child.icon || '',
+                        description: child.description || '',
+                        color: child.color,
+                        type: child.type,
+                        services: [],
+                        children: [],
+                        featured: child.featured,
+                      }))
                     }}
                     onClick={() => handleCategoryClick(category)}
                     showServiceCount={true}
