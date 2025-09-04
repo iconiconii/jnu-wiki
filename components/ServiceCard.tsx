@@ -17,21 +17,21 @@ interface ServiceCardProps {
 const statusConfig = {
   active: {
     label: '正常运行',
-    color: 'bg-green-50 text-green-700 border-green-200',
+    color: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
     icon: '●',
-    dotColor: 'text-green-500'
+    dotColor: 'text-green-500 dark:text-green-400'
   },
   'coming-soon': {
     label: '即将推出',
-    color: 'bg-blue-50 text-blue-700 border-blue-200',
+    color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
     icon: '●',
-    dotColor: 'text-blue-500'
+    dotColor: 'text-blue-500 dark:text-blue-400'
   },
   maintenance: {
     label: '维护中',
-    color: 'bg-orange-50 text-orange-700 border-orange-200',
+    color: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800',
     icon: '●',
-    dotColor: 'text-orange-500'
+    dotColor: 'text-orange-500 dark:text-orange-400'
   }
 }
 
@@ -58,8 +58,9 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
     <Card 
       className={cn(
         "group cursor-pointer transition-all duration-200 hover:shadow-md",
-        "border border-gray-200 bg-white rounded-lg overflow-hidden",
-        "flex flex-col h-full", // 添加flex布局和固定高度
+        // 使用 Card 组件自带的 bg-card/text-card-foreground/border
+        "rounded-lg overflow-hidden",
+        "flex flex-col h-full",
         isDisabled && "opacity-60 cursor-not-allowed",
         className
       )}
@@ -67,7 +68,7 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
     >
       {/* Header with image and status */}
       <div className="relative">
-        <div className="w-full h-40 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden relative">
+        <div className="w-full h-40 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900/50 overflow-hidden relative">
           <Image
             src={service.image || defaultImage}
             alt={service.title}
@@ -77,9 +78,9 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
           
           {/* Status indicator */}
           <div className="absolute top-3 left-3">
-            <div className="flex items-center space-x-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
+            <div className="flex items-center space-x-1 bg-white/90 dark:bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
               <span className={cn("text-xs", status.dotColor)}>{status.icon}</span>
-              <span className="text-gray-700 font-medium">{status.label}</span>
+              <span className="font-medium text-foreground">{status.label}</span>
             </div>
           </div>
 
@@ -88,7 +89,7 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
             <div className="absolute top-3 right-3">
               <Badge 
                 variant="secondary" 
-                className="bg-amber-100 text-amber-800 border-amber-200 text-xs px-2 py-1"
+                className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-100 border-amber-200 dark:border-amber-800 text-xs px-2 py-1"
               >
                 <Star className="w-3 h-3 mr-1 fill-current" />
                 推荐
@@ -99,8 +100,8 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
           {/* External link indicator */}
           {hasValidHref && (
             <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full">
-                <ArrowUpRight className="w-4 h-4 text-gray-600" />
+              <div className="bg-white/90 dark:bg-black/40 backdrop-blur-sm p-2 rounded-full">
+                <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
           )}
@@ -110,10 +111,10 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
       <CardHeader className="pb-3 p-5 flex-1">
         <div className="flex flex-col h-full">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-semibold text-gray-900 mb-2 truncate">
+            <CardTitle className="text-lg font-semibold mb-2 truncate">
               {service.title}
             </CardTitle>
-            <CardDescription className="text-sm text-gray-600 line-clamp-2 min-h-[2.5rem]">
+            <CardDescription className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
               {service.description}
             </CardDescription>
           </div>
@@ -127,7 +128,7 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
             <Badge 
               key={index}
               variant="outline" 
-              className="text-xs bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 transition-colors"
+              className="text-xs"
             >
               {tag}
             </Badge>
@@ -135,7 +136,7 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
           {service.tags.length > 3 && (
             <Badge 
               variant="outline"
-              className="text-xs bg-gray-50 text-gray-500 border-gray-200"
+              className="text-xs text-muted-foreground"
             >
               +{service.tags.length - 3}
             </Badge>
@@ -143,15 +144,15 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
         </div>
 
         {/* Action button */}
-        <Button 
-          className={cn(
-            "w-full transition-all duration-200",
-            isDisabled 
-              ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed text-white" 
-              : service.status === 'coming-soon'
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                : "bg-slate-900 hover:bg-slate-800 text-white"
-          )}
+        <Button
+          variant={
+            isDisabled
+              ? 'secondary'
+              : service.status === 'coming-soon' || !hasValidHref
+                ? 'secondary'
+                : 'default'
+          }
+          className="w-full transition-all duration-200"
           disabled={isDisabled}
           onClick={(e) => {
             e.stopPropagation()
