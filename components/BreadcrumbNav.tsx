@@ -47,7 +47,6 @@ export function BreadcrumbNav({
             size="sm"
             onClick={() => {
               // Navigate to this level (remove items after current index)
-              const newPath = path.slice(0, index + 1)
               onNavigate(item)
             }}
             className={cn(

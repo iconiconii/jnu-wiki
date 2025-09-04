@@ -306,7 +306,7 @@ export function HierarchicalServicesGrid({
                 {showTypeFilter && (
                   <select
                     value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value as any)}
+                    onChange={(e) => setTypeFilter(e.target.value as 'all' | 'campus' | 'general')}
                     className="text-xs sm:text-sm border rounded px-2 py-1"
                   >
                     <option value="all">全部</option>

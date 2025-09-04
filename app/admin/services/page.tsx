@@ -196,6 +196,17 @@ export default function ServicesManagePage() {
     return matchesSearch && matchesCategory && matchesStatus
   })
 
+  // Helper: build category path label
+  const getCategoryPath = (categoryId: string) => {
+    const cat = categories.find(c => c.id === categoryId)
+    if (!cat) return '未分类'
+    if (cat.parent_id) {
+      const parent = categories.find(c => c.id === cat.parent_id)
+      return parent ? `${parent.name} > ${cat.name}` : cat.name
+    }
+    return cat.name
+  }
+
   useEffect(() => {
     if (isAuthenticated) {
       loadData()
@@ -326,7 +337,6 @@ export default function ServicesManagePage() {
             </div>
           ) : (
             filteredServices.map((service) => {
-              const category = categories.find(c => c.id === service.category_id)
               return (
                 <Card key={service.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
@@ -348,7 +358,7 @@ export default function ServicesManagePage() {
                             {service.status === 'active' ? '活跃' : service.status === 'coming-soon' ? '即将上线' : '维护中'}
                           </Badge>
                           <Badge variant="secondary" className="max-w-xs truncate">
-                            <CategoryPath categoryId={service.category_id} categories={categories} />
+                            {getCategoryPath(service.category_id)}
                           </Badge>
                         </div>
                         
@@ -430,13 +440,21 @@ export default function ServicesManagePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">所属分类 *</Label>
-                <CategorySelector
-                  categories={categories}
-                  selectedCategoryId={formData.category_id}
-                  onSelectCategory={(categoryId) => setFormData(prev => ({ ...prev, category_id: categoryId }))}
-                  placeholder="选择分类（校区不能直接关联服务）"
-                  className="text-sm"
-                />
+                <select
+                  id="category"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-md"
+                  value={formData.category_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
+                >
+                  <option value="" disabled>选择分类（校区不能直接关联服务）</option>
+                  {categories
+                    .filter(cat => cat.type !== 'campus')
+                    .map(cat => (
+                      <option key={cat.id} value={cat.id}>
+                        {getCategoryPath(cat.id)}
+                      </option>
+                    ))}
+                </select>
                 <p className="text-xs text-gray-500">
                   提示：服务应该关联到具体的篇章或通用分类，不能直接关联到校区
                 </p>

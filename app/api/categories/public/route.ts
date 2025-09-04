@@ -142,11 +142,13 @@ export async function POST(request: NextRequest) {
           .from('services')
           .select('category_id, categories!inner(type)')
           .then(({ data }) => {
-            return data?.reduce((acc, service) => {
-              const type = (service as any).categories.type
+            type Row = { category_id: string; categories: { type: 'campus' | 'section' | 'general' } }
+            const rows = (data || []) as Row[]
+            return rows.reduce((acc, service) => {
+              const type = service.categories.type
               acc[type] = (acc[type] || 0) + 1
               return acc
-            }, {} as Record<string, number>) || {}
+            }, {} as Record<string, number>)
           })
       ])
 

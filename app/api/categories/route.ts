@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { CreateCategoryRequest, UpdateCategoryRequest, GetCategoriesParams } from '@/types/services'
+import { CreateCategoryRequest, UpdateCategoryRequest } from '@/types/services'
 import { SimpleAdminAuth } from '@/lib/simple-auth'
 
 // 获取所有分类

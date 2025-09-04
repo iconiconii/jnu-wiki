@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { 
   Plus, 
@@ -14,11 +14,9 @@ import {
   Loader2, 
   ChevronRight,
   ChevronDown,
-  Building2,
-  BookOpen,
-  Globe
+  
 } from 'lucide-react'
-import { DatabaseCategory, CreateCategoryRequest, UpdateCategoryRequest } from '@/types/services'
+import { DatabaseCategory, CreateCategoryRequest } from '@/types/services'
 import { cn } from '@/lib/utils'
 
 interface HierarchicalCategoryManagerProps {
@@ -82,14 +80,7 @@ export function HierarchicalCategoryManager({
     setExpandedCategories(newExpanded)
   }
 
-  const getCategoryIcon = (type: string) => {
-    switch (type) {
-      case 'campus': return <Building2 className="w-4 h-4" />
-      case 'section': return <BookOpen className="w-4 h-4" />
-      case 'general': return <Globe className="w-4 h-4" />
-      default: return <Globe className="w-4 h-4" />
-    }
-  }
+  // Icon helper not used currently; remove to satisfy lint
 
   const getCategoryTypeLabel = (type: string) => {
     switch (type) {
@@ -420,7 +411,7 @@ export function HierarchicalCategoryManager({
                 <select
                   id="type"
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'campus' | 'section' | 'general' })}
                   className="w-full border rounded px-3 py-2"
                   disabled={!!parentCategory || !!editingCategory}
                 >
