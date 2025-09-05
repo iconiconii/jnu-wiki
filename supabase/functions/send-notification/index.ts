@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'admin@example.com'
@@ -13,15 +13,15 @@ interface SubmissionNotification {
   created_at: string
 }
 
-serve(async (req) => {
+serve(async req => {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
   }
 
   try {
-    const { record, type } = await req.json() as { 
+    const { record, type } = (await req.json()) as {
       record: SubmissionNotification
-      type: 'INSERT' | 'UPDATE' 
+      type: 'INSERT' | 'UPDATE'
     }
 
     // 只处理新投稿和状态更新
@@ -69,7 +69,7 @@ serve(async (req) => {
     const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -93,7 +93,6 @@ serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
       status: 200,
     })
-
   } catch (error) {
     console.error('Function error:', error)
     return new Response('Internal server error', { status: 500 })

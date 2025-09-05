@@ -5,6 +5,7 @@
 投稿系统让用户可以提交新的学习资源和工具，经管理员审核后展示在平台上。
 
 ### 主要功能
+
 - **用户投稿**: 简单的4字段表单 (分类、标题、描述、URL)
 - **安全防护**: 频率限制、内容过滤、人机验证
 - **管理审核**: 管理员界面审核投稿
@@ -69,55 +70,66 @@ npm install @supabase/supabase-js
 ## 安全特性
 
 ### 频率限制
+
 - 同一IP地址30分钟内最多提交5次投稿
 - 可通过环境变量调整限制参数
 
 ### 内容过滤
+
 - 自动过滤 XSS 攻击脚本
 - 移除潜在危险的 HTML 标签
 - 基础敏感词检查
 
 ### URL 验证
+
 - 验证URL格式有效性
 - 只允许 http/https 协议
 
 ### 重复检查
+
 - 防止相同标题或URL的重复提交
 - 数据库级别的重复检查
 
 ### 人机验证
+
 - 简单数学题验证
 - 防止自动化批量提交
 
 ## API 接口
 
 ### POST /api/submissions
+
 提交新投稿
 
 **请求体:**
+
 ```json
 {
   "category": "分类名称",
   "title": "资源标题",
-  "description": "资源描述", 
+  "description": "资源描述",
   "url": "https://example.com",
   "submittedBy": "提交者信息(可选)"
 }
 ```
 
 ### GET /api/submissions?admin_key=xxx
+
 获取投稿列表 (管理员专用)
 
 **参数:**
+
 - `admin_key`: 管理员密钥 (必需)
 - `status`: 状态过滤 (pending/approved/rejected/all)
 - `limit`: 分页大小 (默认50)
 - `offset`: 分页偏移 (默认0)
 
 ### PUT /api/submissions?admin_key=xxx
+
 更新投稿状态 (管理员专用)
 
 **请求体:**
+
 ```json
 {
   "id": "投稿ID",
@@ -128,6 +140,7 @@ npm install @supabase/supabase-js
 ## 数据库表结构
 
 ### submissions 表
+
 - `id`: UUID 主键
 - `category`: 分类
 - `title`: 标题
@@ -171,6 +184,7 @@ npm install @supabase/supabase-js
 ## 扩展功能
 
 可以考虑的未来增强功能:
+
 - 邮件通知系统
 - 投稿分类建议
 - 批量导入/导出

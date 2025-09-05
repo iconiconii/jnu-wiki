@@ -55,9 +55,7 @@ export default function AdminLoginPage() {
             <Shield className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold">管理员登录</CardTitle>
-          <CardDescription>
-            请输入您的管理员账户信息
-          </CardDescription>
+          <CardDescription>请输入您的管理员账户信息</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -70,7 +68,7 @@ export default function AdminLoginPage() {
                 id="username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={e => setUsername(e.target.value)}
                 placeholder="请输入用户名"
                 required
               />
@@ -85,7 +83,7 @@ export default function AdminLoginPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 placeholder="请输入密码"
                 required
               />
@@ -97,16 +95,15 @@ export default function AdminLoginPage() {
               </Alert>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={isLoading || !username.trim() || !password.trim()}
             >
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               登录
             </Button>
           </form>
-
         </CardContent>
       </Card>
     </div>

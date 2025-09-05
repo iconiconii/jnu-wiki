@@ -17,33 +17,42 @@ interface ServiceCardProps {
 const statusConfig = {
   active: {
     label: '正常运行',
-    color: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
+    color:
+      'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
     icon: '●',
-    dotColor: 'text-green-500 dark:text-green-400'
+    dotColor: 'text-green-500 dark:text-green-400',
   },
   'coming-soon': {
     label: '即将推出',
-    color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
+    color:
+      'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
     icon: '●',
-    dotColor: 'text-blue-500 dark:text-blue-400'
+    dotColor: 'text-blue-500 dark:text-blue-400',
   },
   maintenance: {
     label: '维护中',
-    color: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800',
+    color:
+      'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800',
     icon: '●',
-    dotColor: 'text-orange-500 dark:text-orange-400'
-  }
+    dotColor: 'text-orange-500 dark:text-orange-400',
+  },
 }
 
-export function ServiceCard({ service, onServiceAccess, className, defaultImage = '/images/default-service.svg' }: ServiceCardProps) {
+export function ServiceCard({
+  service,
+  onServiceAccess,
+  className,
+  defaultImage = '/images/default-service.svg',
+}: ServiceCardProps) {
   const status = statusConfig[service.status || 'active']
   const isDisabled = service.status === 'maintenance'
 
-  const hasValidHref = service.href && service.href !== 'https://example.com' && service.href.trim() !== ''
-  
+  const hasValidHref =
+    service.href && service.href !== 'https://example.com' && service.href.trim() !== ''
+
   const handleClick = () => {
     if (isDisabled) return
-    
+
     if (onServiceAccess) {
       onServiceAccess(service)
     } else if (hasValidHref) {
@@ -55,13 +64,13 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
   }
 
   return (
-    <Card 
+    <Card
       className={cn(
-        "group cursor-pointer transition-all duration-200 hover:shadow-md",
+        'group cursor-pointer transition-all duration-200 hover:shadow-md',
         // 使用 Card 组件自带的 bg-card/text-card-foreground/border
-        "rounded-lg overflow-hidden",
-        "flex flex-col h-full",
-        isDisabled && "opacity-60 cursor-not-allowed",
+        'rounded-lg overflow-hidden',
+        'flex flex-col h-full',
+        isDisabled && 'opacity-60 cursor-not-allowed',
         className
       )}
       onClick={handleClick}
@@ -75,11 +84,11 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
             fill
             className="object-cover"
           />
-          
+
           {/* Status indicator */}
           <div className="absolute top-3 left-3">
             <div className="flex items-center space-x-1 bg-white/90 dark:bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
-              <span className={cn("text-xs", status.dotColor)}>{status.icon}</span>
+              <span className={cn('text-xs', status.dotColor)}>{status.icon}</span>
               <span className="font-medium text-foreground">{status.label}</span>
             </div>
           </div>
@@ -87,8 +96,8 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
           {/* Featured badge */}
           {service.featured && (
             <div className="absolute top-3 right-3">
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-100 border-amber-200 dark:border-amber-800 text-xs px-2 py-1"
               >
                 <Star className="w-3 h-3 mr-1 fill-current" />
@@ -96,7 +105,7 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
               </Badge>
             </div>
           )}
-          
+
           {/* External link indicator */}
           {hasValidHref && (
             <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -111,9 +120,7 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
       <CardHeader className="pb-3 p-5 flex-1">
         <div className="flex flex-col h-full">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-semibold mb-2 truncate">
-              {service.title}
-            </CardTitle>
+            <CardTitle className="text-lg font-semibold mb-2 truncate">{service.title}</CardTitle>
             <CardDescription className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
               {service.description}
             </CardDescription>
@@ -125,19 +132,12 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
         {/* Tags */}
         <div className="flex flex-wrap gap-1 mb-4">
           {service.tags.slice(0, 3).map((tag, index) => (
-            <Badge 
-              key={index}
-              variant="outline" 
-              className="text-xs"
-            >
+            <Badge key={index} variant="outline" className="text-xs">
               {tag}
             </Badge>
           ))}
           {service.tags.length > 3 && (
-            <Badge 
-              variant="outline"
-              className="text-xs text-muted-foreground"
-            >
+            <Badge variant="outline" className="text-xs text-muted-foreground">
               +{service.tags.length - 3}
             </Badge>
           )}
@@ -154,7 +154,7 @@ export function ServiceCard({ service, onServiceAccess, className, defaultImage 
           }
           className="w-full transition-all duration-200"
           disabled={isDisabled}
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation()
             handleClick()
           }}

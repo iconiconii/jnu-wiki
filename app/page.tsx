@@ -1,40 +1,43 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Search, GraduationCap, Shield, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { AuthDialog } from "@/components/auth-dialog"
-import { SubmissionForm } from "@/components/SubmissionForm"
-import { ServicesGrid } from "@/components/ServicesGrid"
-import { HierarchicalServicesGrid } from "@/components/HierarchicalServicesGrid"
-import { FeedbackButton } from "@/components/FeedbackButton"
-import { getCategoriesWithServices, getHierarchicalCategories } from "@/lib/services-data"
-import { Service, CategoryConfig, DatabaseCategory } from "@/types/services"
+import { useState, useEffect } from 'react'
+import { Search, GraduationCap, Shield, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { AuthDialog } from '@/components/auth-dialog'
+import { SubmissionForm } from '@/components/SubmissionForm'
+import { ServicesGrid } from '@/components/ServicesGrid'
+import { HierarchicalServicesGrid } from '@/components/HierarchicalServicesGrid'
+import { FeedbackButton } from '@/components/FeedbackButton'
+import { getCategoriesWithServices, getHierarchicalCategories } from '@/lib/services-data'
+import { Service, CategoryConfig, DatabaseCategory } from '@/types/services'
+import { useAuthGate } from '@/hooks/useAuthGate'
 
 export default function HomePage() {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [showSubmissionForm, setShowSubmissionForm] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { isVerified, markVerified } = useAuthGate()
   const [servicesConfig, setServicesConfig] = useState<CategoryConfig>({ categories: [] })
   const [hierarchicalCategories, setHierarchicalCategories] = useState<DatabaseCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [useHierarchical, setUseHierarchical] = useState(true)
 
   useEffect(() => {
-    // 自动触发认证对话框
-    if (!isAuthenticated) {
+    // 首次进入需验证（24h 内免验证）
+    if (!isVerified) {
       setShowAuthDialog(true)
+    } else {
+      setShowAuthDialog(false)
     }
-  }, [isAuthenticated])
+  }, [isVerified])
 
   // 加载服务数据
   useEffect(() => {
     const loadServices = async () => {
       try {
         setLoading(true)
-        
+
         if (useHierarchical) {
           // 加载新的层级结构数据
           const hierarchicalData = await getHierarchicalCategories()
@@ -67,7 +70,7 @@ export default function HomePage() {
 
   // 认证成功回调
   const handleAuthSuccess = () => {
-    setIsAuthenticated(true)
+    markVerified()
     setShowAuthDialog(false)
   }
 
@@ -83,7 +86,6 @@ export default function HomePage() {
       window.open(service.href, '_blank', 'noopener,noreferrer')
     }
   }
-
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -101,17 +103,28 @@ export default function HomePage() {
                 </div>
               </div>
               <nav className="hidden md:flex space-x-6">
-                <a href="#" className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors">
+                <a
+                  href="/services"
+                  className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors"
+                >
                   服务中心
                 </a>
-                <a href="#" className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors">
+                <a
+                  href="#"
+                  className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors"
+                >
                   学习工具
                 </a>
-                <a href="#" className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors">
+                <a
+                  href="#"
+                  className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors"
+                >
                   学术资源
                 </a>
-                <button 
-                  onClick={() => {/* TODO: 打开反馈弹窗 */}} 
+                <button
+                  onClick={() => {
+                    /* TODO: 打开反馈弹窗 */
+                  }}
                   className="text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors"
                 >
                   意见反馈
@@ -126,7 +139,7 @@ export default function HomePage() {
                   placeholder="搜索服务和资源..."
                   className="pl-10 w-72 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                 />
               </div>
               <Button
@@ -148,12 +161,17 @@ export default function HomePage() {
         <div className="text-center mb-12">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Jnu Wiki</h1>
-            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-              指南 OR 工具 OR 资源 in Jnu
-            </p>
+            <p className="text-lg text-slate-600 max-w-3xl mx-auto">指南 OR 工具 OR 资源 in Jnu</p>
+          </div>
+          <div className="flex justify-center gap-3">
+            <Button asChild className="bg-slate-900 hover:bg-slate-800 text-white">
+              <a href="/services">进入服务筛选</a>
+            </Button>
+            <Button asChild variant="outline">
+              <a href="#">了解更多</a>
+            </Button>
           </div>
         </div>
-
 
         {/* Services Content */}
         {loading ? (
@@ -161,7 +179,7 @@ export default function HomePage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
             <span className="ml-3 text-slate-600">加载服务数据...</span>
           </div>
-        ) : !isAuthenticated ? (
+        ) : !isVerified ? (
           <div className="relative">
             {/* 模糊内容背景 */}
             <div className="filter blur-sm pointer-events-none">
@@ -172,7 +190,7 @@ export default function HomePage() {
                 defaultImage="/images/default-service.svg"
               />
             </div>
-            
+
             {/* 认证提示遮罩层 */}
             <div className="absolute inset-0 flex items-center justify-center bg-slate-50/95 backdrop-blur-sm">
               <div className="text-center p-8 bg-white rounded-xl shadow-xl border border-slate-200 max-w-md mx-4">
@@ -181,15 +199,13 @@ export default function HomePage() {
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">校园身份验证</h2>
                 <p className="text-slate-600 mb-6">请验证您的暨南大学身份以访问专属资源</p>
-                <Button 
+                <Button
                   onClick={() => setShowAuthDialog(true)}
                   className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2"
                 >
                   开始验证
                 </Button>
-                <p className="text-xs text-slate-500 mt-4">
-                  确保资源访问的安全性和专属性
-                </p>
+                <p className="text-xs text-slate-500 mt-4">确保资源访问的安全性和专属性</p>
               </div>
             </div>
           </div>
@@ -218,17 +234,14 @@ export default function HomePage() {
         onOpenChange={setShowAuthDialog}
         onAuthSuccess={handleAuthSuccess}
         onAuthFailed={handleAuthFailed}
-        allowClose={isAuthenticated} // 只有已认证后才允许关闭
+        allowClose={isVerified} // 只有已认证后才允许关闭
       />
 
       {/* 投稿表单 */}
-      <SubmissionForm
-        isOpen={showSubmissionForm}
-        onOpenChange={setShowSubmissionForm}
-      />
-      
+      <SubmissionForm isOpen={showSubmissionForm} onOpenChange={setShowSubmissionForm} />
+
       {/* 悬浮反馈按钮 */}
-      {isAuthenticated && <FeedbackButton />}
+      {isVerified && <FeedbackButton />}
     </div>
   )
 }

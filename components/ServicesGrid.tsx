@@ -16,11 +16,11 @@ interface ServicesGridProps {
 type ViewMode = 'categories' | 'services'
 type LayoutMode = 'grid' | 'list'
 
-export function ServicesGrid({ 
-  categories, 
-  searchTerm = '', 
+export function ServicesGrid({
+  categories,
+  searchTerm = '',
   onServiceAccess,
-  defaultImage
+  defaultImage,
 }: ServicesGridProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('categories')
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('grid')
@@ -33,22 +33,25 @@ export function ServicesGrid({
     }
 
     const searchLower = searchTerm.toLowerCase()
-    const filteredCategories = categories.map(category => ({
-      ...category,
-      services: category.services.filter(service =>
-        service.title.toLowerCase().includes(searchLower) ||
-        service.description.toLowerCase().includes(searchLower) ||
-        service.tags.some(tag => tag.toLowerCase().includes(searchLower))
-      )
-    })).filter(category => category.services.length > 0)
+    const filteredCategories = categories
+      .map(category => ({
+        ...category,
+        services: category.services.filter(
+          service =>
+            service.title.toLowerCase().includes(searchLower) ||
+            service.description.toLowerCase().includes(searchLower) ||
+            service.tags.some(tag => tag.toLowerCase().includes(searchLower))
+        ),
+      }))
+      .filter(category => category.services.length > 0)
 
-    const allFilteredServices = filteredCategories.flatMap(category => 
+    const allFilteredServices = filteredCategories.flatMap(category =>
       category.services.map(service => ({ ...service, categoryName: category.name }))
     )
 
     return {
       categories: filteredCategories,
-      services: allFilteredServices
+      services: allFilteredServices,
     }
   }, [categories, searchTerm])
 
@@ -63,15 +66,15 @@ export function ServicesGrid({
   }
 
   // Get current services to display
-  const currentServices = viewMode === 'categories' 
-    ? []
-    : selectedCategory 
-      ? selectedCategory.services 
-      : filteredData.services
+  const currentServices =
+    viewMode === 'categories'
+      ? []
+      : selectedCategory
+        ? selectedCategory.services
+        : filteredData.services
 
-  const currentCategories = viewMode === 'categories' 
-    ? (searchTerm ? filteredData.categories : categories)
-    : []
+  const currentCategories =
+    viewMode === 'categories' ? (searchTerm ? filteredData.categories : categories) : []
 
   // Show search results as services if searching
   const showingSearchResults = searchTerm.trim() !== '' && viewMode === 'categories'
@@ -91,18 +94,16 @@ export function ServicesGrid({
               返回分类
             </Button>
           )}
-          
+
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">
-              {showingSearchResults ? (
-                `搜索结果 (${filteredData.services.length})`
-              ) : viewMode === 'categories' ? (
-                `分类 (${currentCategories.length})`
-              ) : selectedCategory ? (
-                `${selectedCategory.name} (${currentServices.length})`
-              ) : (
-                `服务 (${currentServices.length})`
-              )}
+              {showingSearchResults
+                ? `搜索结果 (${filteredData.services.length})`
+                : viewMode === 'categories'
+                  ? `分类 (${currentCategories.length})`
+                  : selectedCategory
+                    ? `${selectedCategory.name} (${currentServices.length})`
+                    : `服务 (${currentServices.length})`}
             </span>
           </div>
         </div>
@@ -133,37 +134,37 @@ export function ServicesGrid({
       {showingSearchResults ? (
         // Search results view
         filteredData.services.length > 0 ? (
-          <div className={cn(
-            layoutMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
-              : "space-y-4"
-          )}>
-            {filteredData.services.map((service) => (
+          <div
+            className={cn(
+              layoutMode === 'grid'
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch'
+                : 'space-y-4'
+            )}
+          >
+            {filteredData.services.map(service => (
               <ServiceCard
                 key={service.id}
                 service={service}
                 onServiceAccess={onServiceAccess}
                 defaultImage={defaultImage}
-                className={layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : 'h-full'}
+                className={
+                  layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : 'h-full'
+                }
               />
             ))}
           </div>
         ) : (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              没有找到相关服务
-            </h3>
-            <p className="text-gray-600">
-              试试调整搜索关键词或浏览所有分类
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">没有找到相关服务</h3>
+            <p className="text-gray-600">试试调整搜索关键词或浏览所有分类</p>
           </div>
         )
       ) : viewMode === 'categories' ? (
         // Categories view
         currentCategories.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {currentCategories.map((category) => (
+            {currentCategories.map(category => (
               <CategoryCard
                 key={category.id}
                 category={category}
@@ -174,43 +175,35 @@ export function ServicesGrid({
         ) : (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📂</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              暂无分类
-            </h3>
-            <p className="text-gray-600">
-              分类配置可能尚未加载，请稍后再试
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">暂无分类</h3>
+            <p className="text-gray-600">分类配置可能尚未加载，请稍后再试</p>
           </div>
         )
+      ) : // Services view
+      currentServices.length > 0 ? (
+        <div
+          className={cn(
+            layoutMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch'
+              : 'space-y-4'
+          )}
+        >
+          {currentServices.map(service => (
+            <ServiceCard
+              key={service.id}
+              service={service}
+              onServiceAccess={onServiceAccess}
+              defaultImage={defaultImage}
+              className={layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : 'h-full'}
+            />
+          ))}
+        </div>
       ) : (
-        // Services view
-        currentServices.length > 0 ? (
-          <div className={cn(
-            layoutMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
-              : "space-y-4"
-          )}>
-            {currentServices.map((service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                onServiceAccess={onServiceAccess}
-                defaultImage={defaultImage}
-                className={layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : 'h-full'}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              该分类下暂无服务
-            </h3>
-            <p className="text-gray-600">
-              更多服务正在开发中，敬请期待！
-            </p>
-          </div>
-        )
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">📦</div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">该分类下暂无服务</h3>
+          <p className="text-gray-600">更多服务正在开发中，敬请期待！</p>
+        </div>
       )}
     </div>
   )

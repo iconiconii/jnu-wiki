@@ -37,7 +37,7 @@ export async function sendEmail({ to, subject, html }: EmailData) {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -107,11 +107,13 @@ export function generateSubmissionNotificationEmail(data: SubmissionEmailData) {
 }
 
 // 投稿状态更新通知模板
-export function generateStatusUpdateEmail(data: SubmissionEmailData & { status: 'approved' | 'rejected', submitterEmail?: string }) {
+export function generateStatusUpdateEmail(
+  data: SubmissionEmailData & { status: 'approved' | 'rejected'; submitterEmail?: string }
+) {
   const statusText = data.status === 'approved' ? '已通过审核' : '审核未通过'
   const statusColor = data.status === 'approved' ? '#16a34a' : '#dc2626'
   const statusIcon = data.status === 'approved' ? '✅' : '❌'
-  
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
       <div style="background: ${statusColor}; padding: 20px; text-align: center;">
@@ -123,9 +125,10 @@ export function generateStatusUpdateEmail(data: SubmissionEmailData & { status: 
           <h2 style="color: #1f2937; margin-top: 0;">${data.title}</h2>
           <p style="color: ${statusColor}; font-weight: 500; font-size: 16px;">状态：${statusText}</p>
           
-          ${data.status === 'approved' ? 
-            '<p style="color: #16a34a;">🎉 恭喜！你的投稿已通过审核，将很快在平台上展示。</p>' :
-            '<p style="color: #dc2626;">很抱歉，你的投稿未能通过审核。你可以修改后重新提交。</p>'
+          ${
+            data.status === 'approved'
+              ? '<p style="color: #16a34a;">🎉 恭喜！你的投稿已通过审核，将很快在平台上展示。</p>'
+              : '<p style="color: #dc2626;">很抱歉，你的投稿未能通过审核。你可以修改后重新提交。</p>'
           }
         </div>
         
@@ -145,19 +148,19 @@ export function generateFeedbackNotificationEmail(data: FeedbackEmailData) {
     bug: { label: 'Bug报告', icon: '🐛', color: '#dc2626' },
     feature: { label: '功能建议', icon: '💡', color: '#3b82f6' },
     improvement: { label: '体验改进', icon: '⚡', color: '#f59e0b' },
-    other: { label: '其他反馈', icon: '💭', color: '#6b7280' }
+    other: { label: '其他反馈', icon: '💭', color: '#6b7280' },
   }
-  
+
   const priorityConfig = {
     low: { label: '低优先级', color: '#6b7280' },
     normal: { label: '普通', color: '#3b82f6' },
     high: { label: '高优先级', color: '#f59e0b' },
-    urgent: { label: '紧急', color: '#dc2626' }
+    urgent: { label: '紧急', color: '#dc2626' },
   }
-  
+
   const type = typeConfig[data.type]
   const priority = priorityConfig[data.priority]
-  
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
       <div style="background: ${type.color}; padding: 20px; text-align: center;">
@@ -182,18 +185,26 @@ export function generateFeedbackNotificationEmail(data: FeedbackEmailData) {
               <p style="margin: 0; color: #374151; line-height: 1.6;">${data.content}</p>
             </div>
             
-            ${data.page_url ? `
+            ${
+              data.page_url
+                ? `
             <p style="margin: 8px 0; color: #4b5563;">
               <strong style="color: #374151;">页面：</strong> 
               <a href="${data.page_url}" target="_blank" style="color: #3b82f6; text-decoration: none;">${data.page_url}</a>
             </p>
-            ` : ''}
+            `
+                : ''
+            }
             
-            ${data.contact_info ? `
+            ${
+              data.contact_info
+                ? `
             <p style="margin: 8px 0; color: #4b5563;">
               <strong style="color: #374151;">联系方式：</strong> ${data.contact_info}
             </p>
-            ` : ''}
+            `
+                : ''
+            }
             
             <p style="margin: 8px 0; color: #6b7280; font-size: 14px;">
               <strong>反馈时间：</strong> ${new Date(data.created_at).toLocaleString('zh-CN')}
@@ -221,13 +232,16 @@ export function generateFeedbackNotificationEmail(data: FeedbackEmailData) {
 
 // 批量反馈汇总邮件模板
 export function generateFeedbackBatchEmail(feedbacks: FeedbackEmailData[]) {
-  const byType = feedbacks.reduce((acc, f) => {
-    acc[f.type] = (acc[f.type] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
-  
+  const byType = feedbacks.reduce(
+    (acc, f) => {
+      acc[f.type] = (acc[f.type] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>
+  )
+
   const urgentCount = feedbacks.filter(f => f.priority === 'urgent' || f.priority === 'high').length
-  
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
       <div style="background: #1f2937; padding: 20px; text-align: center;">
@@ -242,24 +256,30 @@ export function generateFeedbackBatchEmail(feedbacks: FeedbackEmailData[]) {
             <p style="margin: 8px 0; color: #4b5563;">
               <strong>总反馈数：</strong> ${feedbacks.length} 条
             </p>
-            ${urgentCount > 0 ? `
+            ${
+              urgentCount > 0
+                ? `
             <p style="margin: 8px 0; color: #dc2626;">
               <strong>⚠️ 高优先级：</strong> ${urgentCount} 条
             </p>
-            ` : ''}
+            `
+                : ''
+            }
             
             <div style="margin-top: 15px;">
               <strong style="color: #374151;">分类统计：</strong>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                ${Object.entries(byType).map(([type, count]) => {
-                  const typeLabels = {
-                    bug: '🐛 Bug报告',
-                    feature: '💡 功能建议',
-                    improvement: '⚡ 体验改进',
-                    other: '💭 其他反馈'
-                  }
-                  return `<li style="margin: 5px 0; color: #4b5563;">${typeLabels[type as keyof typeof typeLabels] || type}: ${count} 条</li>`
-                }).join('')}
+                ${Object.entries(byType)
+                  .map(([type, count]) => {
+                    const typeLabels = {
+                      bug: '🐛 Bug报告',
+                      feature: '💡 功能建议',
+                      improvement: '⚡ 体验改进',
+                      other: '💭 其他反馈',
+                    }
+                    return `<li style="margin: 5px 0; color: #4b5563;">${typeLabels[type as keyof typeof typeLabels] || type}: ${count} 条</li>`
+                  })
+                  .join('')}
               </ul>
             </div>
           </div>

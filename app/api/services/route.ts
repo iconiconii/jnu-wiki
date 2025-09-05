@@ -1,27 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { CreateServiceRequest, UpdateServiceRequest, ServiceListResponse, ServiceQuery, SortOption } from '@/types/services'
+import {
+  CreateServiceRequest,
+  UpdateServiceRequest,
+  ServiceListResponse,
+  ServiceQuery,
+  SortOption,
+} from '@/types/services'
 
 // 获取服务列表（支持公开访问的筛选和排序）
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const adminKey = searchParams.get('admin_key')
-    
+
     // 管理员模式
     if (adminKey === process.env.ADMIN_SECRET_KEY) {
       return getServicesAdmin(searchParams)
     }
-    
+
     // 公开模式：支持筛选和排序
     return getServicesPublic(searchParams)
-
   } catch (error) {
     console.error('Get services error:', error)
-    return NextResponse.json(
-      { error: '服务器错误' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }
 
@@ -36,7 +38,7 @@ async function getServicesPublic(searchParams: URLSearchParams) {
       ratingMin: searchParams.get('ratingMin') ? Number(searchParams.get('ratingMin')) : undefined,
       sort: (searchParams.get('sort') as SortOption) || 'newest',
       page: Math.max(1, Number(searchParams.get('page')) || 1),
-      limit: Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 20))
+      limit: Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 20)),
     }
 
     // 参数验证
@@ -46,7 +48,8 @@ async function getServicesPublic(searchParams: URLSearchParams) {
 
     let dbQuery = supabaseAdmin
       .from('services')
-      .select(`
+      .select(
+        `
         id,
         title,
         description,
@@ -59,7 +62,9 @@ async function getServicesPublic(searchParams: URLSearchParams) {
         category_id,
         created_at,
         categories!inner(id, name, icon, color)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .eq('status', 'active') // 只显示活跃服务
 
     // 搜索功能
@@ -74,7 +79,10 @@ async function getServicesPublic(searchParams: URLSearchParams) {
 
     // 标签筛选（包含任一标签）
     if (query.tags) {
-      const tagArray = query.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      const tagArray = query.tags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean)
       if (tagArray.length > 0) {
         const tagConditions = tagArray.map(tag => `tags.cs.{${tag}}`).join(',')
         dbQuery = dbQuery.or(tagConditions)
@@ -111,27 +119,20 @@ async function getServicesPublic(searchParams: URLSearchParams) {
 
     if (error) {
       console.error('Database error:', error)
-      return NextResponse.json(
-        { error: '数据库查询失败' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: '数据库查询失败' }, { status: 500 })
     }
 
     const response: ServiceListResponse = {
       items: data || [],
       page: page,
       limit: limit,
-      total: count || 0
+      total: count || 0,
     }
 
     return NextResponse.json(response)
-
   } catch (error) {
     console.error('Get public services error:', error)
-    return NextResponse.json(
-      { error: '服务器错误' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }
 
@@ -144,10 +145,12 @@ async function getServicesAdmin(searchParams: URLSearchParams) {
 
   let query = supabaseAdmin
     .from('services')
-    .select(`
+    .select(
+      `
       *,
       categories!inner(name, icon)
-    `)
+    `
+    )
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true })
     .range(offset, offset + limit - 1)
@@ -164,17 +167,14 @@ async function getServicesAdmin(searchParams: URLSearchParams) {
 
   if (error) {
     console.error('Database error:', error)
-    return NextResponse.json(
-      { error: '数据库错误' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '数据库错误' }, { status: 500 })
   }
 
   return NextResponse.json({
     services: data || [],
     total: count,
     limit,
-    offset
+    offset,
   })
 }
 
@@ -183,34 +183,28 @@ export async function POST(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const adminKey = searchParams.get('admin_key')
-    
+
     // 验证管理员权限
     if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: '无访问权限' }, { status: 403 })
     }
 
     const body: CreateServiceRequest = await request.json()
-    const { 
-      category_id, 
-      title, 
-      description, 
-      tags = [], 
-      image, 
-      href, 
-      status = 'active', 
-      featured = false, 
-      sort_order = 0 
+    const {
+      category_id,
+      title,
+      description,
+      tags = [],
+      image,
+      href,
+      status = 'active',
+      featured = false,
+      sort_order = 0,
     } = body
 
     // 基础验证
     if (!category_id || !title?.trim()) {
-      return NextResponse.json(
-        { error: '分类ID和标题不能为空' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '分类ID和标题不能为空' }, { status: 400 })
     }
 
     // 验证分类是否存在
@@ -221,10 +215,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (!category) {
-      return NextResponse.json(
-        { error: '指定的分类不存在' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '指定的分类不存在' }, { status: 400 })
     }
 
     // 验证URL格式（如果提供）
@@ -232,10 +223,7 @@ export async function POST(request: NextRequest) {
       try {
         new URL(href.trim())
       } catch {
-        return NextResponse.json(
-          { error: '无效的URL格式' },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: '无效的URL格式' }, { status: 400 })
       }
     }
 
@@ -251,30 +239,23 @@ export async function POST(request: NextRequest) {
         href: href?.trim() || null,
         status,
         featured,
-        sort_order
+        sort_order,
       })
       .select()
       .single()
 
     if (error) {
       console.error('Database error:', error)
-      return NextResponse.json(
-        { error: '创建服务失败' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: '创建服务失败' }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      service: data
+      service: data,
     })
-
   } catch (error) {
     console.error('Create service error:', error)
-    return NextResponse.json(
-      { error: '服务器错误' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }
 
@@ -283,23 +264,17 @@ export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const adminKey = searchParams.get('admin_key')
-    
+
     // 验证管理员权限
     if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: '无访问权限' }, { status: 403 })
     }
 
     const body: UpdateServiceRequest = await request.json()
     const { id, ...updates } = body
 
     if (!id) {
-      return NextResponse.json(
-        { error: '缺少服务ID' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '缺少服务ID' }, { status: 400 })
     }
 
     // 如果更新分类，验证分类是否存在
@@ -311,10 +286,7 @@ export async function PUT(request: NextRequest) {
         .single()
 
       if (!category) {
-        return NextResponse.json(
-          { error: '指定的分类不存在' },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: '指定的分类不存在' }, { status: 400 })
       }
     }
 
@@ -323,10 +295,7 @@ export async function PUT(request: NextRequest) {
       try {
         new URL(updates.href.trim())
       } catch {
-        return NextResponse.json(
-          { error: '无效的URL格式' },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: '无效的URL格式' }, { status: 400 })
       }
     }
 
@@ -360,23 +329,16 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error('Database error:', error)
-      return NextResponse.json(
-        { error: '更新服务失败' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: '更新服务失败' }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      service: data
+      service: data,
     })
-
   } catch (error) {
     console.error('Update service error:', error)
-    return NextResponse.json(
-      { error: '服务器错误' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }
 
@@ -386,45 +348,29 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const adminKey = searchParams.get('admin_key')
     const serviceId = searchParams.get('id')
-    
+
     // 验证管理员权限
     if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: '无访问权限' }, { status: 403 })
     }
 
     if (!serviceId) {
-      return NextResponse.json(
-        { error: '缺少服务ID' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '缺少服务ID' }, { status: 400 })
     }
 
-    const { error } = await supabaseAdmin
-      .from('services')
-      .delete()
-      .eq('id', serviceId)
+    const { error } = await supabaseAdmin.from('services').delete().eq('id', serviceId)
 
     if (error) {
       console.error('Database error:', error)
-      return NextResponse.json(
-        { error: '删除服务失败' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: '删除服务失败' }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      message: '服务删除成功'
+      message: '服务删除成功',
     })
-
   } catch (error) {
     console.error('Delete service error:', error)
-    return NextResponse.json(
-      { error: '服务器错误' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

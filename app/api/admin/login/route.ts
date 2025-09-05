@@ -10,10 +10,7 @@ export async function POST(request: NextRequest) {
     const { username, password } = await request.json()
 
     if (!username || !password) {
-      return NextResponse.json(
-        { error: '用户名和密码不能为空' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '用户名和密码不能为空' }, { status: 400 })
     }
 
     // 从数据库查找管理员
@@ -24,27 +21,21 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error || !admin) {
-      return NextResponse.json(
-        { error: '用户名或密码错误' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 })
     }
 
     // 验证密码
     const isValid = await bcrypt.compare(password, admin.password_hash)
 
     if (!isValid) {
-      return NextResponse.json(
-        { error: '用户名或密码错误' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 })
     }
 
     // 生成 JWT token
     const token = jwt.sign(
-      { 
-        id: admin.id, 
-        username: admin.username 
+      {
+        id: admin.id,
+        username: admin.username,
       },
       JWT_SECRET,
       { expiresIn: '24h' }
@@ -55,15 +46,11 @@ export async function POST(request: NextRequest) {
       token,
       user: {
         id: admin.id,
-        username: admin.username
-      }
+        username: admin.username,
+      },
     })
-
   } catch (error) {
     console.error('Login error:', error)
-    return NextResponse.json(
-      { error: '服务器错误' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

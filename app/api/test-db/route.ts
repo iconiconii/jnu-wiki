@@ -11,20 +11,24 @@ export async function GET() {
       .limit(1)
 
     if (tablesError) {
-      return NextResponse.json({
-        success: false,
-        error: 'Database connection failed',
-        details: tablesError
-      }, { status: 500 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Database connection failed',
+          details: tablesError,
+        },
+        { status: 500 }
+      )
     }
 
     // 获取表统计
     const [categoriesResult, servicesResult] = await Promise.allSettled([
       supabase.from('categories').select('*', { count: 'exact' }),
-      supabase.from('services').select('*', { count: 'exact' })
+      supabase.from('services').select('*', { count: 'exact' }),
     ])
 
-    const categoriesCount = categoriesResult.status === 'fulfilled' ? categoriesResult.value.count : 0
+    const categoriesCount =
+      categoriesResult.status === 'fulfilled' ? categoriesResult.value.count : 0
     const servicesCount = servicesResult.status === 'fulfilled' ? servicesResult.value.count : 0
 
     return NextResponse.json({
@@ -33,16 +37,18 @@ export async function GET() {
       stats: {
         categories: categoriesCount,
         services: servicesCount,
-        sampleData: tables
-      }
+        sampleData: tables,
+      },
     })
-
   } catch (error) {
     console.error('Database test error:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'Database test failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Database test failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
   }
 }

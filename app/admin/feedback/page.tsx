@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -7,12 +7,12 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { 
-  Bug, 
-  Lightbulb, 
-  Zap, 
+import {
+  Bug,
+  Lightbulb,
+  Zap,
   MessageCircle,
-  Clock, 
+  Clock,
   CheckCircle2,
   Eye,
   Loader2,
@@ -25,9 +25,15 @@ import {
   Calendar,
   ExternalLink,
   MessageSquare,
-  Reply
+  Reply,
 } from 'lucide-react'
-import { Feedback, FeedbackStats, FEEDBACK_TYPES, FEEDBACK_STATUS, FEEDBACK_PRIORITY } from '@/types/feedback'
+import {
+  Feedback,
+  FeedbackStats,
+  FEEDBACK_TYPES,
+  FEEDBACK_STATUS,
+  FEEDBACK_PRIORITY,
+} from '@/types/feedback'
 
 export default function FeedbackManagementPage() {
   const router = useRouter()
@@ -41,13 +47,13 @@ export default function FeedbackManagementPage() {
   const [filters, setFilters] = useState({
     status: 'all',
     type: 'all',
-    priority: 'all'
+    priority: 'all',
   })
 
   // 使用认证的API请求
   const authenticatedRequest = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('admin_token')
-    
+
     if (!token) {
       throw new Error('未认证')
     }
@@ -87,24 +93,27 @@ export default function FeedbackManagementPage() {
   // 加载反馈列表
   const loadFeedbacks = useCallback(async () => {
     if (!isAuthenticated) return
-    
+
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (filters.status !== 'all') params.append('status', filters.status)
       if (filters.type !== 'all') params.append('type', filters.type)
       if (filters.priority !== 'all') params.append('priority', filters.priority)
-      
+
       const queryString = params.toString()
       const url = `/api/feedback${queryString ? `?${queryString}` : ''}`
-      
+
       const data = await authenticatedRequest(url)
-      
+
       setFeedbacks(data.feedback)
       setStats(data.stats)
     } catch (error) {
       console.error('Load feedbacks error:', error)
-      if (error instanceof Error && (error.message.includes('未认证') || error.message.includes('认证失败'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('未认证') || error.message.includes('认证失败'))
+      ) {
         router.push('/admin/login')
       }
     } finally {
@@ -153,7 +162,7 @@ export default function FeedbackManagementPage() {
   // 回复反馈
   const replyToFeedback = async (id: string) => {
     if (!replyText.trim()) return
-    
+
     setIsReplying(true)
     try {
       await authenticatedRequest('/api/feedback', {
@@ -161,10 +170,10 @@ export default function FeedbackManagementPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          id, 
+        body: JSON.stringify({
+          id,
           admin_reply: replyText.trim(),
-          status: 'resolved' // 回复后自动标记为已解决
+          status: 'resolved', // 回复后自动标记为已解决
         }),
       })
 
@@ -186,11 +195,10 @@ export default function FeedbackManagementPage() {
       bug: <Bug className="h-4 w-4 text-red-500" />,
       feature: <Lightbulb className="h-4 w-4 text-blue-500" />,
       improvement: <Zap className="h-4 w-4 text-yellow-500" />,
-      other: <MessageCircle className="h-4 w-4 text-gray-500" />
+      other: <MessageCircle className="h-4 w-4 text-gray-500" />,
     }
     return icons[type as keyof typeof icons] || icons.other
   }
-
 
   // 获取优先级图标
   const getPriorityIcon = (priority?: string) => {
@@ -198,7 +206,7 @@ export default function FeedbackManagementPage() {
       low: <ArrowDownCircle className="h-4 w-4 text-gray-500" />,
       normal: <ArrowRightCircle className="h-4 w-4 text-blue-500" />,
       high: <ArrowUpCircle className="h-4 w-4 text-orange-500" />,
-      urgent: <AlertTriangle className="h-4 w-4 text-red-500" />
+      urgent: <AlertTriangle className="h-4 w-4 text-red-500" />,
     }
     return icons[priority as keyof typeof icons] || icons.normal
   }
@@ -210,9 +218,9 @@ export default function FeedbackManagementPage() {
       yellow: 'text-yellow-600 border-yellow-600 bg-yellow-50',
       blue: 'text-blue-600 border-blue-600 bg-blue-50',
       green: 'text-green-600 border-green-600 bg-green-50',
-      gray: 'text-gray-600 border-gray-600 bg-gray-50'
+      gray: 'text-gray-600 border-gray-600 bg-gray-50',
     }
-    
+
     return (
       <Badge variant="outline" className={colorClasses[config.color as keyof typeof colorClasses]}>
         {config.label}
@@ -222,14 +230,15 @@ export default function FeedbackManagementPage() {
 
   // 获取优先级标签
   const getPriorityBadge = (priority?: string) => {
-    const config = FEEDBACK_PRIORITY[priority as keyof typeof FEEDBACK_PRIORITY] || FEEDBACK_PRIORITY.normal
+    const config =
+      FEEDBACK_PRIORITY[priority as keyof typeof FEEDBACK_PRIORITY] || FEEDBACK_PRIORITY.normal
     const colorClasses = {
       gray: 'text-gray-600 border-gray-600 bg-gray-50',
       blue: 'text-blue-600 border-blue-600 bg-blue-50',
       orange: 'text-orange-600 border-orange-600 bg-orange-50',
-      red: 'text-red-600 border-red-600 bg-red-50'
+      red: 'text-red-600 border-red-600 bg-red-50',
     }
-    
+
     return (
       <Badge variant="outline" className={colorClasses[config.color as keyof typeof colorClasses]}>
         {config.label}
@@ -273,12 +282,7 @@ export default function FeedbackManagementPage() {
               <h1 className="text-xl font-bold text-slate-900">反馈管理</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadFeedbacks}
-                disabled={loading}
-              >
+              <Button variant="outline" size="sm" onClick={loadFeedbacks} disabled={loading}>
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
@@ -349,7 +353,7 @@ export default function FeedbackManagementPage() {
               <label className="text-sm font-medium text-slate-700">状态:</label>
               <select
                 value={filters.status}
-                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                onChange={e => setFilters({ ...filters, status: e.target.value })}
                 className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">全部状态</option>
@@ -359,12 +363,12 @@ export default function FeedbackManagementPage() {
                 <option value="closed">已关闭</option>
               </select>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-slate-700">类型:</label>
               <select
                 value={filters.type}
-                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                onChange={e => setFilters({ ...filters, type: e.target.value })}
                 className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">全部类型</option>
@@ -374,12 +378,12 @@ export default function FeedbackManagementPage() {
                 <option value="other">其他反馈</option>
               </select>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-slate-700">优先级:</label>
               <select
                 value={filters.priority}
-                onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                onChange={e => setFilters({ ...filters, priority: e.target.value })}
                 className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">全部优先级</option>
@@ -404,7 +408,7 @@ export default function FeedbackManagementPage() {
               <p className="text-slate-500">暂无反馈数据</p>
             </div>
           ) : (
-            feedbacks.map((feedback) => (
+            feedbacks.map(feedback => (
               <Card key={feedback.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -412,20 +416,16 @@ export default function FeedbackManagementPage() {
                       <div className="flex items-center space-x-3 mb-3">
                         {getTypeIcon(feedback.type)}
                         {getPriorityIcon(feedback.priority)}
-                        <h3 className="text-lg font-semibold text-slate-900">
-                          {feedback.title}
-                        </h3>
+                        <h3 className="text-lg font-semibold text-slate-900">{feedback.title}</h3>
                         {getStatusBadge(feedback.status)}
                         {getPriorityBadge(feedback.priority)}
                         <Badge variant="secondary">
                           {FEEDBACK_TYPES[feedback.type]?.label || feedback.type}
                         </Badge>
                       </div>
-                      
-                      <p className="text-slate-600 mb-4 line-clamp-2">
-                        {feedback.content}
-                      </p>
-                      
+
+                      <p className="text-slate-600 mb-4 line-clamp-2">{feedback.content}</p>
+
                       <div className="flex items-center space-x-6 text-sm text-slate-500">
                         <span className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
@@ -449,7 +449,7 @@ export default function FeedbackManagementPage() {
                           </a>
                         )}
                       </div>
-                      
+
                       {feedback.admin_reply && (
                         <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                           <p className="text-sm text-blue-800">
@@ -458,7 +458,7 @@ export default function FeedbackManagementPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 ml-4">
                       <Button
                         variant="outline"
@@ -486,7 +486,7 @@ export default function FeedbackManagementPage() {
               <span>反馈详情</span>
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedFeedback && (
             <div className="space-y-6">
               {/* 基本信息 */}
@@ -497,7 +497,12 @@ export default function FeedbackManagementPage() {
                     {getStatusBadge(selectedFeedback.status)}
                     <select
                       value={selectedFeedback.status || 'open'}
-                      onChange={(e) => updateFeedbackStatus(selectedFeedback.id!, e.target.value as Feedback['status'])}
+                      onChange={e =>
+                        updateFeedbackStatus(
+                          selectedFeedback.id!,
+                          e.target.value as Feedback['status']
+                        )
+                      }
                       className="px-2 py-1 border border-gray-300 rounded text-sm"
                     >
                       <option value="open">待处理</option>
@@ -513,7 +518,12 @@ export default function FeedbackManagementPage() {
                     {getPriorityBadge(selectedFeedback.priority)}
                     <select
                       value={selectedFeedback.priority || 'normal'}
-                      onChange={(e) => updateFeedbackPriority(selectedFeedback.id!, e.target.value as Feedback['priority'])}
+                      onChange={e =>
+                        updateFeedbackPriority(
+                          selectedFeedback.id!,
+                          e.target.value as Feedback['priority']
+                        )
+                      }
                       className="px-2 py-1 border border-gray-300 rounded text-sm"
                     >
                       <option value="low">低优先级</option>
@@ -524,20 +534,20 @@ export default function FeedbackManagementPage() {
                   </div>
                 </div>
               </div>
-              
+
               {/* 反馈内容 */}
               <div>
                 <Label className="text-sm font-medium text-slate-600">标题</Label>
                 <p className="mt-1 text-slate-900 font-medium">{selectedFeedback.title}</p>
               </div>
-              
+
               <div>
                 <Label className="text-sm font-medium text-slate-600">详细描述</Label>
                 <div className="mt-1 p-4 bg-gray-50 rounded-lg">
                   <p className="text-slate-700 whitespace-pre-wrap">{selectedFeedback.content}</p>
                 </div>
               </div>
-              
+
               {/* 附加信息 */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -556,14 +566,14 @@ export default function FeedbackManagementPage() {
                   </p>
                 </div>
               </div>
-              
+
               {selectedFeedback.contact_info && (
                 <div>
                   <Label className="text-sm font-medium text-slate-600">联系方式</Label>
                   <p className="mt-1 text-slate-700">{selectedFeedback.contact_info}</p>
                 </div>
               )}
-              
+
               {selectedFeedback.page_url && (
                 <div>
                   <Label className="text-sm font-medium text-slate-600">来源页面</Label>
@@ -577,19 +587,25 @@ export default function FeedbackManagementPage() {
                   </a>
                 </div>
               )}
-              
+
               {/* 浏览器信息 */}
               {selectedFeedback.browser_info && (
                 <div>
                   <Label className="text-sm font-medium text-slate-600">浏览器信息</Label>
                   <div className="mt-1 text-sm text-slate-600 space-y-1">
-                    <p><strong>用户代理:</strong> {selectedFeedback.browser_info.userAgent}</p>
-                    <p><strong>屏幕分辨率:</strong> {selectedFeedback.browser_info.screenResolution}</p>
-                    <p><strong>视窗大小:</strong> {selectedFeedback.browser_info.viewport}</p>
+                    <p>
+                      <strong>用户代理:</strong> {selectedFeedback.browser_info.userAgent}
+                    </p>
+                    <p>
+                      <strong>屏幕分辨率:</strong> {selectedFeedback.browser_info.screenResolution}
+                    </p>
+                    <p>
+                      <strong>视窗大小:</strong> {selectedFeedback.browser_info.viewport}
+                    </p>
                   </div>
                 </div>
               )}
-              
+
               {/* 管理员回复 */}
               <div>
                 <Label className="text-sm font-medium text-slate-600">管理员回复</Label>
@@ -601,7 +617,7 @@ export default function FeedbackManagementPage() {
                   <div className="mt-1 space-y-3">
                     <textarea
                       value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
+                      onChange={e => setReplyText(e.target.value)}
                       placeholder="输入回复内容..."
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

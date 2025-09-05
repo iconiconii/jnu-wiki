@@ -3,7 +3,12 @@ import { DatabaseCategory, DatabaseService, Service, ServiceCategory } from '@/t
 import { CategoryCard } from './CategoryCard'
 import { ServiceCard } from './ServiceCard'
 import { BreadcrumbNav, BreadcrumbItem, buildBreadcrumbPath } from './BreadcrumbNav'
-import { AnimatedPageTransition, AnimatedGrid, AnimatedBreadcrumb, AnimatedTitle } from './AnimatedPageTransition'
+import {
+  AnimatedPageTransition,
+  AnimatedGrid,
+  AnimatedBreadcrumb,
+  AnimatedTitle,
+} from './AnimatedPageTransition'
 import { Button } from '@/components/ui/button'
 import { Grid3X3, List, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -29,25 +34,25 @@ interface NavigationState {
 
 type NavigationDirection = 'forward' | 'backward'
 
-export function HierarchicalServicesGrid({ 
-  categories, 
-  searchTerm = '', 
+export function HierarchicalServicesGrid({
+  categories,
+  searchTerm = '',
   onServiceAccess,
   defaultImage,
-  className
+  className,
 }: HierarchicalServicesGridProps) {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('grid')
   const [showTypeFilter, setShowTypeFilter] = useState(false)
   const [typeFilter, setTypeFilter] = useState<'all' | 'campus' | 'general'>('all')
   const [navigationDirection, setNavigationDirection] = useState<NavigationDirection>('forward')
-  
+
   // Navigation state
   const [navState, setNavState] = useState<NavigationState>({
     level: 'top',
     currentCategory: null,
     breadcrumbPath: [],
     displayCategories: [],
-    displayServices: []
+    displayServices: [],
   })
 
   // Enhanced search with cross-campus support and path display
@@ -59,23 +64,24 @@ export function HierarchicalServicesGrid({
     const searchLower = searchTerm.toLowerCase()
     const matchedCategories = categories.filter(category => {
       // Check category name and description
-      const categoryMatch = 
+      const categoryMatch =
         category.name.toLowerCase().includes(searchLower) ||
         category.description?.toLowerCase().includes(searchLower)
-      
+
       // Check services within category
-      const servicesMatch = category.services?.some(service =>
-        service.title.toLowerCase().includes(searchLower) ||
-        service.description?.toLowerCase().includes(searchLower) ||
-        service.tags?.some(tag => tag.toLowerCase().includes(searchLower))
+      const servicesMatch = category.services?.some(
+        service =>
+          service.title.toLowerCase().includes(searchLower) ||
+          service.description?.toLowerCase().includes(searchLower) ||
+          service.tags?.some(tag => tag.toLowerCase().includes(searchLower))
       )
-      
+
       return categoryMatch || servicesMatch
     })
 
     // For search results, also include parent categories to show full hierarchy
     const enrichedResults = [...matchedCategories]
-    
+
     matchedCategories.forEach(category => {
       if (category.parent_id) {
         const parent = categories.find(cat => cat.id === category.parent_id)
@@ -91,7 +97,7 @@ export function HierarchicalServicesGrid({
   // Get top-level categories (campus + general)
   const topLevelCategories = useMemo(() => {
     const filtered = filteredCategories.filter(cat => !cat.parent_id)
-    
+
     if (typeFilter === 'all') {
       return filtered
     } else if (typeFilter === 'campus') {
@@ -144,27 +150,28 @@ export function HierarchicalServicesGrid({
   // Get all services matching search term across categories
   const getAllMatchingServices = useMemo(() => {
     if (!searchTerm.trim()) return []
-    
+
     const searchLower = searchTerm.toLowerCase()
     const allServices: (Service & { categoryPath: string })[] = []
-    
+
     categories.forEach(category => {
       if (category.services) {
-        const matchingServices = category.services.filter(service =>
-          service.title.toLowerCase().includes(searchLower) ||
-          service.description?.toLowerCase().includes(searchLower) ||
-          service.tags?.some(tag => tag.toLowerCase().includes(searchLower))
+        const matchingServices = category.services.filter(
+          service =>
+            service.title.toLowerCase().includes(searchLower) ||
+            service.description?.toLowerCase().includes(searchLower) ||
+            service.tags?.some(tag => tag.toLowerCase().includes(searchLower))
         )
-        
+
         matchingServices.forEach(service => {
           allServices.push({
             ...mapDbService(service),
-            categoryPath: getCategoryPath(category)
+            categoryPath: getCategoryPath(category),
           })
         })
       }
     })
-    
+
     return allServices
   }, [categories, searchTerm, getCategoryPath])
 
@@ -199,15 +206,22 @@ export function HierarchicalServicesGrid({
     setNavState(prev => ({
       ...prev,
       displayCategories,
-      displayServices
+      displayServices,
     }))
-  }, [navState.level, navState.currentCategory, topLevelCategories, getChildCategories, getCurrentServices, searchTerm])
+  }, [
+    navState.level,
+    navState.currentCategory,
+    topLevelCategories,
+    getChildCategories,
+    getCurrentServices,
+    searchTerm,
+  ])
 
   // Handle navigation
   const handleCategoryClick = (category: DatabaseCategory) => {
     const newPath = buildBreadcrumbPath(category, categories)
     setNavigationDirection('forward')
-    
+
     if (category.type === 'campus') {
       // Navigate to campus sections
       setNavState({
@@ -215,7 +229,7 @@ export function HierarchicalServicesGrid({
         currentCategory: category,
         breadcrumbPath: newPath,
         displayCategories: [],
-        displayServices: []
+        displayServices: [],
       })
     } else if (category.type === 'section') {
       // Navigate to section services
@@ -224,7 +238,7 @@ export function HierarchicalServicesGrid({
         currentCategory: category,
         breadcrumbPath: newPath,
         displayCategories: [],
-        displayServices: []
+        displayServices: [],
       })
     } else if (category.type === 'general') {
       // Navigate to general services
@@ -233,14 +247,14 @@ export function HierarchicalServicesGrid({
         currentCategory: category,
         breadcrumbPath: newPath,
         displayCategories: [],
-        displayServices: []
+        displayServices: [],
       })
     }
   }
 
   const handleBreadcrumbNavigate = (item: BreadcrumbItem | null) => {
     setNavigationDirection('backward')
-    
+
     if (!item) {
       // Navigate to home
       setNavState({
@@ -248,7 +262,7 @@ export function HierarchicalServicesGrid({
         currentCategory: null,
         breadcrumbPath: [],
         displayCategories: [],
-        displayServices: []
+        displayServices: [],
       })
     } else {
       const category = categories.find(cat => cat.id === item.id)
@@ -264,7 +278,7 @@ export function HierarchicalServicesGrid({
       const categoryCount = topLevelCategories.length
       return `搜索 "${searchTerm}" - 找到 ${categoryCount} 个分类, ${serviceCount} 个服务`
     }
-    
+
     switch (navState.level) {
       case 'top':
         return '选择校区或通用服务'
@@ -280,16 +294,13 @@ export function HierarchicalServicesGrid({
   const showLayoutToggle = navState.level === 'services' && navState.displayServices.length > 0
 
   return (
-    <div className={cn("space-y-4 sm:space-y-6", className)}>
+    <div className={cn('space-y-4 sm:space-y-6', className)}>
       {/* Navigation and controls */}
       <div className="space-y-3 sm:space-y-4">
         {/* Breadcrumb */}
         {navState.breadcrumbPath.length > 0 && (
           <AnimatedBreadcrumb>
-            <BreadcrumbNav 
-              path={navState.breadcrumbPath}
-              onNavigate={handleBreadcrumbNavigate}
-            />
+            <BreadcrumbNav path={navState.breadcrumbPath} onNavigate={handleBreadcrumbNavigate} />
           </AnimatedBreadcrumb>
         )}
 
@@ -297,11 +308,9 @@ export function HierarchicalServicesGrid({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             <AnimatedTitle>
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-                {getViewTitle()}
-              </h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">{getViewTitle()}</h2>
             </AnimatedTitle>
-            
+
             {navState.level === 'top' && (
               <div className="flex items-center space-x-2">
                 <Button
@@ -313,11 +322,11 @@ export function HierarchicalServicesGrid({
                   <Filter className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                   筛选
                 </Button>
-                
+
                 {showTypeFilter && (
                   <select
                     value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value as 'all' | 'campus' | 'general')}
+                    onChange={e => setTypeFilter(e.target.value as 'all' | 'campus' | 'general')}
                     className="text-xs sm:text-sm border rounded px-2 py-1"
                   >
                     <option value="all">全部</option>
@@ -362,15 +371,13 @@ export function HierarchicalServicesGrid({
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">🔍 所有匹配的服务</h3>
-              <div className="text-sm text-muted-foreground">
-                跨校区搜索结果
-              </div>
+              <div className="text-sm text-muted-foreground">跨校区搜索结果</div>
             </div>
-            <AnimatedGrid 
+            <AnimatedGrid
               className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch"
               staggerDelay={0.05}
             >
-              {getAllMatchingServices.map((service) => (
+              {getAllMatchingServices.map(service => (
                 <div key={service.id} className="space-y-2 h-full flex flex-col">
                   <div className="text-xs text-primary px-1 font-medium">
                     📍 {service.categoryPath}
@@ -391,14 +398,14 @@ export function HierarchicalServicesGrid({
             )}
           </div>
         )}
-        
+
         {navState.displayCategories.length > 0 ? (
           // Show categories with staggered animation
-          <AnimatedGrid 
+          <AnimatedGrid
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch"
             staggerDelay={0.1}
           >
-            {navState.displayCategories.map((category) => (
+            {navState.displayCategories.map(category => (
               <div key={category.id} className="space-y-2 h-full flex flex-col">
                 {/* Show path in search mode */}
                 {searchTerm && category.parent_id && (
@@ -417,17 +424,19 @@ export function HierarchicalServicesGrid({
                       services: (category.services || []).map(mapDbService),
                       type: category.type,
                       featured: category.featured,
-                      children: (category.children || []).map((child): ServiceCategory => ({
-                        id: child.id,
-                        name: child.name,
-                        icon: child.icon || '',
-                        description: child.description || '',
-                        color: child.color,
-                        type: child.type,
-                        services: [],
-                        children: [],
-                        featured: child.featured,
-                      }))
+                      children: (category.children || []).map(
+                        (child): ServiceCategory => ({
+                          id: child.id,
+                          name: child.name,
+                          icon: child.icon || '',
+                          description: child.description || '',
+                          color: child.color,
+                          type: child.type,
+                          services: [],
+                          children: [],
+                          featured: child.featured,
+                        })
+                      ),
                     }}
                     onClick={() => handleCategoryClick(category)}
                     showServiceCount={true}
@@ -439,15 +448,15 @@ export function HierarchicalServicesGrid({
           </AnimatedGrid>
         ) : navState.displayServices.length > 0 ? (
           // Show services with staggered animation
-          <AnimatedGrid 
+          <AnimatedGrid
             className={cn(
-              layoutMode === 'grid' 
-                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch"
-                : "space-y-3 sm:space-y-4"
+              layoutMode === 'grid'
+                ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch'
+                : 'space-y-3 sm:space-y-4'
             )}
             staggerDelay={0.05}
           >
-            {navState.displayServices.map((service) => (
+            {navState.displayServices.map(service => (
               <div key={service.id} className="space-y-2 h-full flex flex-col">
                 {/* Show category path for services in search mode */}
                 {searchTerm && navState.currentCategory && (
@@ -460,9 +469,7 @@ export function HierarchicalServicesGrid({
                   onServiceAccess={onServiceAccess}
                   defaultImage={defaultImage}
                   className={cn(
-                    layoutMode === 'list' 
-                      ? 'flex flex-row items-center max-w-none'
-                      : 'h-full'
+                    layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : 'h-full'
                   )}
                 />
               </div>
@@ -475,13 +482,16 @@ export function HierarchicalServicesGrid({
               {navState.level === 'top' ? '🏠' : navState.level === 'campus' ? '📂' : '📦'}
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              {navState.level === 'top' && searchTerm ? '没有找到相关内容' : 
-               navState.level === 'campus' ? '该校区暂无篇章' :
-               '该分类下暂无服务'}
+              {navState.level === 'top' && searchTerm
+                ? '没有找到相关内容'
+                : navState.level === 'campus'
+                  ? '该校区暂无篇章'
+                  : '该分类下暂无服务'}
             </h3>
             <p className="text-muted-foreground">
-              {navState.level === 'top' && searchTerm ? '试试调整搜索关键词' : 
-               '更多内容正在添加中，敬请期待！'}
+              {navState.level === 'top' && searchTerm
+                ? '试试调整搜索关键词'
+                : '更多内容正在添加中，敬请期待！'}
             </p>
           </div>
         )}

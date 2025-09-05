@@ -14,18 +14,20 @@ A modern, interactive service directory and information portal built with Next.j
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm, yarn, pnpm, or bun
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/iconiconii/jnu-wiki.git
 cd jnu-wiki
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 # or
@@ -35,6 +37,7 @@ pnpm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 # or
@@ -79,7 +82,7 @@ jnu-wiki/
 ## 📋 Available Scripts
 
 - `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build production application  
+- `npm run build` - Build production application
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint code linting
 

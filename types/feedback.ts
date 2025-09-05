@@ -92,70 +92,70 @@ export const FEEDBACK_TYPES = {
     label: 'Bug报告',
     description: '发现了系统错误或异常',
     icon: '🐛',
-    priority: 'high' as const
+    priority: 'high' as const,
   },
   feature: {
     label: '功能建议',
     description: '希望添加新的功能',
     icon: '💡',
-    priority: 'normal' as const
+    priority: 'normal' as const,
   },
   improvement: {
     label: '体验改进',
     description: '现有功能的改进建议',
     icon: '⚡',
-    priority: 'normal' as const
+    priority: 'normal' as const,
   },
   other: {
     label: '其他反馈',
     description: '其他意见或建议',
     icon: '💭',
-    priority: 'normal' as const
-  }
+    priority: 'normal' as const,
+  },
 } as const
 
 export const FEEDBACK_STATUS = {
   open: {
     label: '待处理',
     color: 'yellow',
-    icon: '📝'
+    icon: '📝',
   },
   in_progress: {
     label: '处理中',
     color: 'blue',
-    icon: '⚡'
+    icon: '⚡',
   },
   resolved: {
     label: '已解决',
     color: 'green',
-    icon: '✅'
+    icon: '✅',
   },
   closed: {
     label: '已关闭',
     color: 'gray',
-    icon: '📁'
-  }
+    icon: '📁',
+  },
 } as const
 
 export const FEEDBACK_PRIORITY = {
   low: {
     label: '低优先级',
     color: 'gray',
-    icon: '⬇️'
+    icon: '⬇️',
   },
   normal: {
     label: '普通',
     color: 'blue',
-    icon: '➡️'
+    icon: '➡️',
   },
   high: {
     label: '高优先级',
     color: 'orange',
-    icon: '⬆️'
+    icon: '⬆️',
   },
   urgent: {
     label: '紧急',
     color: 'red',
-    icon: '🚨'
-  }
+    icon: '🚨',
+  },
 } as const

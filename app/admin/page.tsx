@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -7,15 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  ExternalLink, 
-  Eye,
-  Loader2,
-  RefreshCw
-} from 'lucide-react'
+import { CheckCircle, XCircle, Clock, ExternalLink, Eye, Loader2, RefreshCw } from 'lucide-react'
 import { Submission, SubmissionStats } from '@/lib/supabase'
 
 export default function AdminPage() {
@@ -25,12 +17,14 @@ export default function AdminPage() {
   const [stats, setStats] = useState<SubmissionStats | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>(
+    'all'
+  )
 
   // 使用认证的API请求
   const authenticatedRequest = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('admin_token')
-    
+
     if (!token) {
       throw new Error('未认证')
     }
@@ -70,29 +64,35 @@ export default function AdminPage() {
   // 加载投稿列表
   const loadSubmissions = async () => {
     if (!isAuthenticated) return
-    
+
     setLoading(true)
     try {
       const statusParam = statusFilter === 'all' ? '' : `?status=${statusFilter}`
       const data = await authenticatedRequest(`/api/submissions${statusParam}`)
-      
+
       setSubmissions(data.submissions)
-      
+
       // 计算统计数据
-      const stats = data.submissions.reduce((acc: SubmissionStats, sub: Submission) => {
-        acc.total++
-        const status = sub.status || 'pending'
-        if (status === 'pending') acc.pending++
-        else if (status === 'approved') acc.approved++
-        else if (status === 'rejected') acc.rejected++
-        return acc
-      }, { total: 0, pending: 0, approved: 0, rejected: 0 })
-      
+      const stats = data.submissions.reduce(
+        (acc: SubmissionStats, sub: Submission) => {
+          acc.total++
+          const status = sub.status || 'pending'
+          if (status === 'pending') acc.pending++
+          else if (status === 'approved') acc.approved++
+          else if (status === 'rejected') acc.rejected++
+          return acc
+        },
+        { total: 0, pending: 0, approved: 0, rejected: 0 }
+      )
+
       setStats(stats)
     } catch (error) {
       console.error('Load submissions error:', error)
       // 如果认证失败，跳转到登录页
-      if (error instanceof Error && (error.message.includes('未认证') || error.message.includes('认证失败'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('未认证') || error.message.includes('认证失败'))
+      ) {
         router.push('/admin/login')
       }
     } finally {
@@ -136,11 +136,23 @@ export default function AdminPage() {
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case 'approved':
-        return <Badge variant="outline" className="text-green-600 border-green-600">已通过</Badge>
+        return (
+          <Badge variant="outline" className="text-green-600 border-green-600">
+            已通过
+          </Badge>
+        )
       case 'rejected':
-        return <Badge variant="outline" className="text-red-600 border-red-600">已拒绝</Badge>
+        return (
+          <Badge variant="outline" className="text-red-600 border-red-600">
+            已拒绝
+          </Badge>
+        )
       default:
-        return <Badge variant="outline" className="text-yellow-600 border-yellow-600">待审核</Badge>
+        return (
+          <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+            待审核
+          </Badge>
+        )
     }
   }
 
@@ -172,26 +184,13 @@ export default function AdminPage() {
               <h1 className="text-xl font-bold text-slate-900">投稿管理系统</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/admin/categories')}
-              >
+              <Button variant="outline" size="sm" onClick={() => router.push('/admin/categories')}>
                 分类管理
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/admin/feedback')}
-              >
+              <Button variant="outline" size="sm" onClick={() => router.push('/admin/feedback')}>
                 反馈管理
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadSubmissions}
-                disabled={loading}
-              >
+              <Button variant="outline" size="sm" onClick={loadSubmissions} disabled={loading}>
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
@@ -268,16 +267,20 @@ export default function AdminPage() {
         {/* 过滤器 */}
         <div className="mb-6">
           <div className="flex space-x-2">
-            {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
+            {(['all', 'pending', 'approved', 'rejected'] as const).map(status => (
               <Button
                 key={status}
-                variant={statusFilter === status ? "default" : "outline"}
+                variant={statusFilter === status ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStatusFilter(status)}
               >
-                {status === 'all' ? '全部' : 
-                 status === 'pending' ? '待审核' :
-                 status === 'approved' ? '已通过' : '已拒绝'}
+                {status === 'all'
+                  ? '全部'
+                  : status === 'pending'
+                    ? '待审核'
+                    : status === 'approved'
+                      ? '已通过'
+                      : '已拒绝'}
               </Button>
             ))}
           </div>
@@ -294,29 +297,25 @@ export default function AdminPage() {
               <p className="text-slate-500">暂无投稿数据</p>
             </div>
           ) : (
-            submissions.map((submission) => (
+            submissions.map(submission => (
               <Card key={submission.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         {getStatusIcon(submission.status)}
-                        <h3 className="text-lg font-semibold text-slate-900">
-                          {submission.title}
-                        </h3>
+                        <h3 className="text-lg font-semibold text-slate-900">{submission.title}</h3>
                         {getStatusBadge(submission.status)}
                         <Badge variant="secondary">{submission.category}</Badge>
                       </div>
-                      
-                      <p className="text-slate-600 mb-3 line-clamp-2">
-                        {submission.description}
-                      </p>
-                      
+
+                      <p className="text-slate-600 mb-3 line-clamp-2">{submission.description}</p>
+
                       <div className="flex items-center space-x-4 text-sm text-slate-500">
-                        <span>提交时间: {new Date(submission.created_at || '').toLocaleString()}</span>
-                        {submission.submitted_by && (
-                          <span>提交者: {submission.submitted_by}</span>
-                        )}
+                        <span>
+                          提交时间: {new Date(submission.created_at || '').toLocaleString()}
+                        </span>
+                        {submission.submitted_by && <span>提交者: {submission.submitted_by}</span>}
                         <a
                           href={submission.url}
                           target="_blank"
@@ -327,7 +326,7 @@ export default function AdminPage() {
                         </a>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 ml-4">
                       <Button
                         variant="outline"
@@ -337,7 +336,7 @@ export default function AdminPage() {
                         <Eye className="h-4 w-4 mr-1" />
                         详情
                       </Button>
-                      
+
                       {submission.status === 'pending' && (
                         <>
                           <Button
@@ -378,15 +377,13 @@ export default function AdminPage() {
               <span>投稿详情</span>
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedSubmission && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-slate-600">状态</Label>
-                  <div className="mt-1">
-                    {getStatusBadge(selectedSubmission.status)}
-                  </div>
+                  <div className="mt-1">{getStatusBadge(selectedSubmission.status)}</div>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-slate-600">分类</Label>
@@ -395,17 +392,17 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <Label className="text-sm font-medium text-slate-600">标题</Label>
                 <p className="mt-1 text-slate-900">{selectedSubmission.title}</p>
               </div>
-              
+
               <div>
                 <Label className="text-sm font-medium text-slate-600">描述</Label>
                 <p className="mt-1 text-slate-700">{selectedSubmission.description}</p>
               </div>
-              
+
               <div>
                 <Label className="text-sm font-medium text-slate-600">链接</Label>
                 <a
@@ -417,18 +414,20 @@ export default function AdminPage() {
                   {selectedSubmission.url} <ExternalLink className="h-4 w-4 ml-2" />
                 </a>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 text-sm text-slate-500">
                 <div>
                   <Label className="text-sm font-medium text-slate-600">提交时间</Label>
-                  <p className="mt-1">{new Date(selectedSubmission.created_at || '').toLocaleString()}</p>
+                  <p className="mt-1">
+                    {new Date(selectedSubmission.created_at || '').toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-slate-600">提交者</Label>
                   <p className="mt-1">{selectedSubmission.submitted_by || '匿名'}</p>
                 </div>
               </div>
-              
+
               {selectedSubmission.status === 'pending' && (
                 <div className="flex justify-end space-x-3 pt-4 border-t">
                   <Button

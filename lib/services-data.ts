@@ -1,5 +1,10 @@
 import { supabase } from './supabase'
-import { DatabaseCategory, DatabaseService, ServiceCategory, CategoryConfig } from '@/types/services'
+import {
+  DatabaseCategory,
+  DatabaseService,
+  ServiceCategory,
+  CategoryConfig,
+} from '@/types/services'
 
 // 数据转换函数：将数据库格式转换为前端格式
 export function transformDatabaseToFrontend(dbCategories: DatabaseCategory[]): CategoryConfig {
@@ -18,8 +23,8 @@ export function transformDatabaseToFrontend(dbCategories: DatabaseCategory[]): C
       image: dbService.image || undefined,
       href: dbService.href || undefined,
       status: dbService.status,
-      featured: dbService.featured
-    }))
+      featured: dbService.featured,
+    })),
   }))
 
   return { categories }
@@ -30,10 +35,12 @@ export async function getCategoriesWithServices(): Promise<CategoryConfig> {
   try {
     const { data, error } = await supabase
       .from('categories')
-      .select(`
+      .select(
+        `
         *,
         services (*)
-      `)
+      `
+      )
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true })
 
@@ -50,7 +57,7 @@ export async function getCategoriesWithServices(): Promise<CategoryConfig> {
           return a.sort_order - b.sort_order
         }
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      })
+      }),
     }))
 
     return transformDatabaseToFrontend(categoriesWithSortedServices as DatabaseCategory[])
@@ -78,11 +85,7 @@ export async function getCategories(): Promise<DatabaseCategory[]> {
 
 // 获取单个分类
 export async function getCategoryById(id: string): Promise<DatabaseCategory | null> {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data, error } = await supabase.from('categories').select('*').eq('id', id).single()
 
   if (error) {
     if (error.code === 'PGRST116') {
@@ -112,11 +115,7 @@ export async function getServicesByCategory(categoryId: string): Promise<Databas
 
 // 获取单个服务
 export async function getServiceById(id: string): Promise<DatabaseService | null> {
-  const { data, error } = await supabase
-    .from('services')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data, error } = await supabase.from('services').select('*').eq('id', id).single()
 
   if (error) {
     if (error.code === 'PGRST116') {
@@ -171,11 +170,11 @@ export async function getHierarchicalCategories(): Promise<DatabaseCategory[]> {
   try {
     // 使用新的公共 API
     const response = await fetch('/api/categories/public?tree=true')
-    
+
     if (!response.ok) {
       throw new Error('网络请求失败')
     }
-    
+
     const result = await response.json()
     return result.categories || []
   } catch (error) {
@@ -184,14 +183,16 @@ export async function getHierarchicalCategories(): Promise<DatabaseCategory[]> {
     try {
       const { data, error: supabaseError } = await supabase
         .from('categories')
-        .select(`
+        .select(
+          `
           *,
           children:categories!parent_id(
             *,
             services(*)
           ),
           services(*)
-        `)
+        `
+        )
         .is('parent_id', null)
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true })
@@ -209,14 +210,16 @@ export async function getHierarchicalCategories(): Promise<DatabaseCategory[]> {
 }
 
 // 获取特定类型的分类
-export async function getCategoriesByType(type: 'campus' | 'section' | 'general'): Promise<DatabaseCategory[]> {
+export async function getCategoriesByType(
+  type: 'campus' | 'section' | 'general'
+): Promise<DatabaseCategory[]> {
   try {
     const response = await fetch(`/api/categories/public?type=${type}&include_services=true`)
-    
+
     if (!response.ok) {
       throw new Error('网络请求失败')
     }
-    
+
     const result = await response.json()
     return result.categories || []
   } catch (error) {
@@ -228,12 +231,14 @@ export async function getCategoriesByType(type: 'campus' | 'section' | 'general'
 // 获取校区的子分类
 export async function getCampusSections(campusId: string): Promise<DatabaseCategory[]> {
   try {
-    const response = await fetch(`/api/categories/public?parent_id=${campusId}&include_services=true`)
-    
+    const response = await fetch(
+      `/api/categories/public?parent_id=${campusId}&include_services=true`
+    )
+
     if (!response.ok) {
       throw new Error('网络请求失败')
     }
-    
+
     const result = await response.json()
     return result.categories || []
   } catch (error) {
@@ -248,20 +253,20 @@ export async function getServiceStats() {
     const [categoriesResult, servicesResult, featuredResult] = await Promise.all([
       supabase.from('categories').select('id', { count: 'exact' }),
       supabase.from('services').select('id', { count: 'exact' }),
-      supabase.from('services').select('id', { count: 'exact' }).eq('featured', true)
+      supabase.from('services').select('id', { count: 'exact' }).eq('featured', true),
     ])
 
     return {
       categoriesCount: categoriesResult.count || 0,
       servicesCount: servicesResult.count || 0,
-      featuredCount: featuredResult.count || 0
+      featuredCount: featuredResult.count || 0,
     }
   } catch (error) {
     console.error('获取统计信息失败:', error)
     return {
       categoriesCount: 0,
       servicesCount: 0,
-      featuredCount: 0
+      featuredCount: 0,
     }
   }
 }

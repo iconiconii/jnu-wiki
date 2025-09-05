@@ -6,10 +6,7 @@ import { useCallback, useRef } from 'react'
  * @param delay 延迟时间（毫秒）
  * @returns 防抖后的函数
  */
-export function useDebounce<T extends (...args: any[]) => any>(
-  callback: T,
-  delay: number
-): T {
+export function useDebounce<T extends (...args: any[]) => any>(callback: T, delay: number): T {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const debouncedCallback = useCallback(
@@ -46,7 +43,7 @@ export function useDebouncedSubmit<T extends (...args: any[]) => Promise<any>>(
   const debouncedSubmit = useCallback(
     async (...args: Parameters<T>) => {
       const now = Date.now()
-      
+
       // 如果正在提交，直接返回
       if (isSubmittingRef.current) {
         console.warn('表单正在提交中，请勿重复提交')
@@ -62,14 +59,17 @@ export function useDebouncedSubmit<T extends (...args: any[]) => Promise<any>>(
       try {
         isSubmittingRef.current = true
         lastSubmitTimeRef.current = now
-        
+
         const result = await submitFn(...args)
         return result
       } finally {
         // 确保在提交完成后重置状态
-        setTimeout(() => {
-          isSubmittingRef.current = false
-        }, Math.min(delay, 500)) // 至少等待 500ms 再允许下次提交
+        setTimeout(
+          () => {
+            isSubmittingRef.current = false
+          },
+          Math.min(delay, 500)
+        ) // 至少等待 500ms 再允许下次提交
       }
     },
     [submitFn, delay]
@@ -78,6 +78,6 @@ export function useDebouncedSubmit<T extends (...args: any[]) => Promise<any>>(
   return {
     debouncedSubmit: debouncedSubmit as T,
     isSubmitting: () => isSubmittingRef.current,
-    getLastSubmitTime: () => lastSubmitTimeRef.current
+    getLastSubmitTime: () => lastSubmitTimeRef.current,
   }
 }

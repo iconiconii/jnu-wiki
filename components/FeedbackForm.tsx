@@ -1,17 +1,11 @@
-"use client"
+'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { 
-  MessageSquare, 
-  Send, 
-  Loader2,
-  CheckCircle,
-  X
-} from 'lucide-react'
+import { MessageSquare, Send, Loader2, CheckCircle, X } from 'lucide-react'
 import { FeedbackFormData, FEEDBACK_TYPES } from '@/types/feedback'
 
 interface FeedbackFormProps {
@@ -21,19 +15,19 @@ interface FeedbackFormProps {
   currentPageUrl?: string
 }
 
-export function FeedbackForm({ 
-  isOpen, 
-  onOpenChange, 
+export function FeedbackForm({
+  isOpen,
+  onOpenChange,
   initialType = 'other',
-  currentPageUrl 
+  currentPageUrl,
 }: FeedbackFormProps) {
   const [formData, setFormData] = useState<FeedbackFormData>({
     type: initialType,
     title: '',
     content: '',
-    contact_info: ''
+    contact_info: '',
   })
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitResult, setSubmitResult] = useState<{
     success: boolean
@@ -44,7 +38,7 @@ export function FeedbackForm({
   // 收集浏览器信息
   const getBrowserInfo = () => {
     if (typeof window === 'undefined') return null
-    
+
     return {
       userAgent: navigator.userAgent,
       language: navigator.language,
@@ -52,7 +46,7 @@ export function FeedbackForm({
       cookieEnabled: navigator.cookieEnabled,
       screenResolution: `${screen.width}x${screen.height}`,
       viewport: `${window.innerWidth}x${window.innerHeight}`,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }
   }
 
@@ -62,7 +56,7 @@ export function FeedbackForm({
       type: initialType,
       title: '',
       content: '',
-      contact_info: ''
+      contact_info: '',
     })
     setErrors({})
     setSubmitResult(null)
@@ -71,7 +65,7 @@ export function FeedbackForm({
   // 验证表单
   const validateForm = (): boolean => {
     const newErrors: Partial<FeedbackFormData> = {}
-    
+
     if (!formData.title.trim()) {
       newErrors.title = '请填写标题'
     } else if (formData.title.length < 5) {
@@ -79,7 +73,7 @@ export function FeedbackForm({
     } else if (formData.title.length > 100) {
       newErrors.title = '标题不能超过100个字符'
     }
-    
+
     if (!formData.content.trim()) {
       newErrors.content = '请填写反馈内容'
     } else if (formData.content.length < 10) {
@@ -87,11 +81,11 @@ export function FeedbackForm({
     } else if (formData.content.length > 1000) {
       newErrors.content = '内容不能超过1000个字符'
     }
-    
+
     if (formData.contact_info && formData.contact_info.length > 100) {
       newErrors.contact_info = '联系方式不能超过100个字符'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -99,14 +93,14 @@ export function FeedbackForm({
   // 提交反馈
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
-    
+
     setIsSubmitting(true)
     setSubmitResult(null)
-    
+
     try {
       const response = await fetch('/api/feedback', {
         method: 'POST',
@@ -116,16 +110,16 @@ export function FeedbackForm({
         body: JSON.stringify({
           ...formData,
           page_url: currentPageUrl || window.location.href,
-          browser_info: getBrowserInfo()
+          browser_info: getBrowserInfo(),
         }),
       })
-      
+
       const data = await response.json()
-      
+
       if (response.ok && data.success) {
         setSubmitResult({
           success: true,
-          message: data.message
+          message: data.message,
         })
         // 3秒后自动关闭
         setTimeout(() => {
@@ -135,14 +129,14 @@ export function FeedbackForm({
       } else {
         setSubmitResult({
           success: false,
-          message: data.error || '提交失败，请重试'
+          message: data.error || '提交失败，请重试',
         })
       }
     } catch (error) {
       console.error('Submit feedback error:', error)
       setSubmitResult({
         success: false,
-        message: '网络错误，请检查连接后重试'
+        message: '网络错误，请检查连接后重试',
       })
     } finally {
       setIsSubmitting(false)
@@ -156,7 +150,6 @@ export function FeedbackForm({
     }
   }, [isOpen, resetForm])
 
-
   // 成功状态
   if (submitResult?.success) {
     return (
@@ -164,16 +157,9 @@ export function FeedbackForm({
         <DialogContent className="max-w-md">
           <div className="text-center py-6">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              反馈提交成功！
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {submitResult.message}
-            </p>
-            <Button 
-              onClick={() => onOpenChange(false)} 
-              className="bg-green-600 hover:bg-green-700"
-            >
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">反馈提交成功！</h3>
+            <p className="text-gray-600 mb-6">{submitResult.message}</p>
+            <Button onClick={() => onOpenChange(false)} className="bg-green-600 hover:bg-green-700">
               完成
             </Button>
           </div>
@@ -191,7 +177,7 @@ export function FeedbackForm({
             <span>提交反馈</span>
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 反馈类型选择 */}
           <div>
@@ -201,7 +187,9 @@ export function FeedbackForm({
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setFormData({ ...formData, type: key as FeedbackFormData['type'] })}
+                  onClick={() =>
+                    setFormData({ ...formData, type: key as FeedbackFormData['type'] })
+                  }
                   className={`p-3 rounded-lg border-2 transition-all text-left ${
                     formData.type === key
                       ? 'border-blue-500 bg-blue-50'
@@ -226,17 +214,13 @@ export function FeedbackForm({
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
               placeholder="简要描述您的反馈..."
               className={`mt-1 ${errors.title ? 'border-red-500' : ''}`}
               maxLength={100}
             />
-            {errors.title && (
-              <p className="text-red-500 text-sm mt-1">{errors.title}</p>
-            )}
-            <p className="text-gray-500 text-xs mt-1">
-              {formData.title.length}/100
-            </p>
+            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+            <p className="text-gray-500 text-xs mt-1">{formData.title.length}/100</p>
           </div>
 
           {/* 详细内容 */}
@@ -247,7 +231,7 @@ export function FeedbackForm({
             <textarea
               id="content"
               value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              onChange={e => setFormData({ ...formData, content: e.target.value })}
               placeholder="请详细描述您遇到的问题或建议..."
               rows={6}
               className={`mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
@@ -255,12 +239,8 @@ export function FeedbackForm({
               }`}
               maxLength={1000}
             />
-            {errors.content && (
-              <p className="text-red-500 text-sm mt-1">{errors.content}</p>
-            )}
-            <p className="text-gray-500 text-xs mt-1">
-              {formData.content.length}/1000
-            </p>
+            {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
+            <p className="text-gray-500 text-xs mt-1">{formData.content.length}/1000</p>
           </div>
 
           {/* 联系方式（可选） */}
@@ -271,7 +251,7 @@ export function FeedbackForm({
             <Input
               id="contact"
               value={formData.contact_info}
-              onChange={(e) => setFormData({ ...formData, contact_info: e.target.value })}
+              onChange={e => setFormData({ ...formData, contact_info: e.target.value })}
               placeholder="邮箱或其他联系方式，用于回复您的反馈"
               className={`mt-1 ${errors.contact_info ? 'border-red-500' : ''}`}
               maxLength={100}
@@ -279,9 +259,7 @@ export function FeedbackForm({
             {errors.contact_info && (
               <p className="text-red-500 text-sm mt-1">{errors.contact_info}</p>
             )}
-            <p className="text-gray-500 text-xs mt-1">
-              提供联系方式可以让我们更好地回复您的反馈
-            </p>
+            <p className="text-gray-500 text-xs mt-1">提供联系方式可以让我们更好地回复您的反馈</p>
           </div>
 
           {/* 错误信息 */}
@@ -304,11 +282,7 @@ export function FeedbackForm({
             >
               取消
             </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
+            <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

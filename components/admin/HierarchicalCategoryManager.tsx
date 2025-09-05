@@ -4,18 +4,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Save, 
-  X, 
-  Loader2, 
-  ChevronRight,
-  ChevronDown,
-  
-} from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Plus, Edit, Trash2, Save, X, Loader2, ChevronRight, ChevronDown } from 'lucide-react'
 import { DatabaseCategory, CreateCategoryRequest } from '@/types/services'
 import { cn } from '@/lib/utils'
 
@@ -29,17 +25,17 @@ interface CategoryFormData extends CreateCategoryRequest {
   id?: string
 }
 
-export function HierarchicalCategoryManager({ 
-  categories, 
-  onRefresh, 
-  onAuthError 
+export function HierarchicalCategoryManager({
+  categories,
+  onRefresh,
+  onAuthError,
 }: HierarchicalCategoryManagerProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [showDialog, setShowDialog] = useState(false)
   const [editingCategory, setEditingCategory] = useState<DatabaseCategory | null>(null)
   const [parentCategory, setParentCategory] = useState<DatabaseCategory | null>(null)
   const [loading, setLoading] = useState(false)
-  
+
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     icon: '',
@@ -48,14 +44,14 @@ export function HierarchicalCategoryManager({
     type: 'general',
     parent_id: null,
     featured: false,
-    sort_order: 0
+    sort_order: 0,
   })
 
   // 组织分类为树形结构
   const organizeCategories = (cats: DatabaseCategory[]) => {
     const topLevel = cats.filter(cat => !cat.parent_id)
     const childrenMap = new Map<string, DatabaseCategory[]>()
-    
+
     cats.forEach(cat => {
       if (cat.parent_id) {
         if (!childrenMap.has(cat.parent_id)) {
@@ -64,7 +60,7 @@ export function HierarchicalCategoryManager({
         childrenMap.get(cat.parent_id)!.push(cat)
       }
     })
-    
+
     return { topLevel, childrenMap }
   }
 
@@ -84,19 +80,27 @@ export function HierarchicalCategoryManager({
 
   const getCategoryTypeLabel = (type: string) => {
     switch (type) {
-      case 'campus': return '校区'
-      case 'section': return '篇章'
-      case 'general': return '通用'
-      default: return '未知'
+      case 'campus':
+        return '校区'
+      case 'section':
+        return '篇章'
+      case 'general':
+        return '通用'
+      default:
+        return '未知'
     }
   }
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'campus': return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'section': return 'bg-purple-100 text-purple-800 border-purple-200'
-      case 'general': return 'bg-green-100 text-green-800 border-green-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+      case 'campus':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'section':
+        return 'bg-purple-100 text-purple-800 border-purple-200'
+      case 'general':
+        return 'bg-green-100 text-green-800 border-green-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
 
@@ -111,7 +115,7 @@ export function HierarchicalCategoryManager({
       type: parent ? 'section' : 'general',
       parent_id: parent?.id || null,
       featured: false,
-      sort_order: 0
+      sort_order: 0,
     })
     setShowDialog(true)
   }
@@ -128,7 +132,7 @@ export function HierarchicalCategoryManager({
       type: category.type,
       parent_id: category.parent_id,
       featured: category.featured,
-      sort_order: category.sort_order
+      sort_order: category.sort_order,
     })
     setShowDialog(true)
   }
@@ -145,7 +149,7 @@ export function HierarchicalCategoryManager({
       type: 'general',
       parent_id: null,
       featured: false,
-      sort_order: 0
+      sort_order: 0,
     })
   }
 
@@ -161,23 +165,27 @@ export function HierarchicalCategoryManager({
 
       const url = editingCategory ? '/api/categories' : '/api/categories'
       const method = editingCategory ? 'PUT' : 'POST'
-      
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(editingCategory ? formData : {
-          name: formData.name,
-          icon: formData.icon,
-          description: formData.description,
-          color: formData.color,
-          type: formData.type,
-          parent_id: formData.parent_id,
-          featured: formData.featured,
-          sort_order: formData.sort_order
-        })
+        body: JSON.stringify(
+          editingCategory
+            ? formData
+            : {
+                name: formData.name,
+                icon: formData.icon,
+                description: formData.description,
+                color: formData.color,
+                type: formData.type,
+                parent_id: formData.parent_id,
+                featured: formData.featured,
+                sort_order: formData.sort_order,
+              }
+        ),
       })
 
       if (!response.ok) {
@@ -210,8 +218,8 @@ export function HierarchicalCategoryManager({
       const response = await fetch(`/api/categories?id=${category.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
 
       if (!response.ok) {
@@ -234,7 +242,7 @@ export function HierarchicalCategoryManager({
     const children = childrenMap.get(category.id) || []
 
     return (
-      <div key={category.id} className={cn("border rounded-lg", level > 0 && "ml-6 mt-2")}>
+      <div key={category.id} className={cn('border rounded-lg', level > 0 && 'ml-6 mt-2')}>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -254,14 +262,14 @@ export function HierarchicalCategoryManager({
                     )}
                   </Button>
                 )}
-                
+
                 {/* Category info */}
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl">{category.icon || '📁'}</span>
                   <div>
                     <div className="flex items-center space-x-2">
                       <span className="font-medium">{category.name}</span>
-                      <Badge className={cn("text-xs", getTypeColor(category.type))}>
+                      <Badge className={cn('text-xs', getTypeColor(category.type))}>
                         {getCategoryTypeLabel(category.type)}
                       </Badge>
                       {category.featured && (
@@ -294,15 +302,11 @@ export function HierarchicalCategoryManager({
                     添加篇章
                   </Button>
                 )}
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEditDialog(category)}
-                >
+
+                <Button variant="outline" size="sm" onClick={() => openEditDialog(category)}>
                   <Edit className="w-4 h-4" />
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -318,9 +322,7 @@ export function HierarchicalCategoryManager({
 
         {/* Render children */}
         {isExpanded && hasChildren && (
-          <div className="mt-2">
-            {children.map(child => renderCategory(child, level + 1))}
-          </div>
+          <div className="mt-2">{children.map(child => renderCategory(child, level + 1))}</div>
         )}
       </div>
     )
@@ -334,7 +336,7 @@ export function HierarchicalCategoryManager({
           <h2 className="text-2xl font-bold">分类管理（层级模式）</h2>
           <p className="text-gray-600 mt-1">管理校区、篇章和通用分类</p>
         </div>
-        
+
         <div className="flex space-x-2">
           <Button onClick={() => openCreateDialog()}>
             <Plus className="w-4 h-4 mr-2" />
@@ -358,19 +360,16 @@ export function HierarchicalCategoryManager({
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editingCategory ? '编辑分类' : '新建分类'}
-            </DialogTitle>
+            <DialogTitle>{editingCategory ? '编辑分类' : '新建分类'}</DialogTitle>
             <DialogDescription>
-              {parentCategory 
-                ? `为 "${parentCategory.name}" 创建子分类` 
-                : editingCategory 
-                  ? '修改分类信息' 
-                  : '创建新的顶级分类'
-              }
+              {parentCategory
+                ? `为 "${parentCategory.name}" 创建子分类`
+                : editingCategory
+                  ? '修改分类信息'
+                  : '创建新的顶级分类'}
             </DialogDescription>
           </DialogHeader>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -378,18 +377,18 @@ export function HierarchicalCategoryManager({
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
                   placeholder="分类名称"
                   required
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="icon">图标</Label>
                 <Input
                   id="icon"
                   value={formData.icon}
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                  onChange={e => setFormData({ ...formData, icon: e.target.value })}
                   placeholder="🏫"
                 />
               </div>
@@ -400,7 +399,7 @@ export function HierarchicalCategoryManager({
               <Input
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
                 placeholder="分类描述"
               />
             </div>
@@ -411,7 +410,12 @@ export function HierarchicalCategoryManager({
                 <select
                   id="type"
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'campus' | 'section' | 'general' })}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      type: e.target.value as 'campus' | 'section' | 'general',
+                    })
+                  }
                   className="w-full border rounded px-3 py-2"
                   disabled={!!parentCategory || !!editingCategory}
                 >
@@ -420,13 +424,13 @@ export function HierarchicalCategoryManager({
                   <option value="general">通用</option>
                 </select>
               </div>
-              
+
               <div>
                 <Label htmlFor="color">颜色</Label>
                 <select
                   id="color"
                   value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                  onChange={e => setFormData({ ...formData, color: e.target.value })}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="blue">蓝色</option>
@@ -446,17 +450,19 @@ export function HierarchicalCategoryManager({
                   id="sort_order"
                   type="number"
                   value={formData.sort_order}
-                  onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+                  onChange={e =>
+                    setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })
+                  }
                   placeholder="0"
                 />
               </div>
-              
+
               <div className="flex items-center space-x-2 pt-6">
                 <input
                   id="featured"
                   type="checkbox"
                   checked={formData.featured}
-                  onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                  onChange={e => setFormData({ ...formData, featured: e.target.checked })}
                 />
                 <Label htmlFor="featured">推荐</Label>
               </div>

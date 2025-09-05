@@ -1,6 +1,7 @@
 # 📋 服务配置说明
 
 ## 数据配置文件位置
+
 `/data/services.ts` - 主要的服务配置文件
 
 ## 配置结构说明
@@ -55,7 +56,7 @@ export const servicesConfig: CategoryConfig = {
           image: '/images/ai-assistant.png',
           href: 'https://ai.example.com',
           status: 'active',
-          featured: true
+          featured: true,
         },
         {
           id: 'course-planner',
@@ -64,9 +65,9 @@ export const servicesConfig: CategoryConfig = {
           tags: ['课程', '规划', '学习'],
           // image: '/images/course-planner.png', // 可以省略，会使用默认图片
           href: 'https://courses.example.com',
-          status: 'coming-soon'
-        }
-      ]
+          status: 'coming-soon',
+        },
+      ],
     },
     {
       id: 'resources',
@@ -82,11 +83,11 @@ export const servicesConfig: CategoryConfig = {
           tags: ['图书馆', '书籍', '研究'],
           image: '/images/library.png',
           href: 'https://library.example.com',
-          status: 'active'
-        }
-      ]
-    }
-  ]
+          status: 'active',
+        },
+      ],
+    },
+  ],
 }
 ```
 
@@ -104,6 +105,7 @@ export const servicesConfig: CategoryConfig = {
 4. 支持格式：PNG, JPG, SVG
 
 ### 默认图片
+
 - 如果服务没有配置 `image` 字段或字段为空，系统会自动使用默认图片
 - 默认图片路径：`/images/default-service.svg`
 - 你可以替换这个文件来自定义默认图片，或在组件中配置其他默认图片
@@ -111,6 +113,7 @@ export const servicesConfig: CategoryConfig = {
 ## 图标选择
 
 建议使用合适的 emoji 图标：
+
 - 学术：🎓 📚 🔬 📖 ✏️
 - 工具：🛠️ ⚙️ 🔧 💻 📱
 - 资源：📁 📋 📊 💾 🗂️

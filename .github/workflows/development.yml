@@ -10,26 +10,26 @@ jobs:
   # 代码质量检查
   code-quality:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Run ESLint
         run: npm run lint
-        
+
       - name: TypeScript type checking
         run: npx tsc --noEmit
-        
+
       - name: Check build
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
@@ -37,7 +37,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
           ADMIN_SECRET_KEY: test-admin-key
         run: npm run build
-        
+
       # 可选：代码格式检查
       - name: Check Prettier formatting
         run: |
@@ -49,14 +49,14 @@ jobs:
   # 安全扫描
   security-scan:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Run npm audit
         run: npm audit --audit-level=high
-        
+
       - name: Check for secrets in code
         uses: trufflesecurity/trufflehog@main
         with:
@@ -68,19 +68,19 @@ jobs:
   # 依赖检查
   dependency-check:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          
+
       - name: Check outdated packages
         run: npm outdated || true
-        
+
       - name: Check for unused dependencies
         run: |
           npx depcheck || {

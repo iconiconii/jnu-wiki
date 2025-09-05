@@ -18,14 +18,14 @@ interface BreadcrumbNavProps {
   showIcons?: boolean
 }
 
-export function BreadcrumbNav({ 
-  path, 
-  onNavigate, 
+export function BreadcrumbNav({
+  path,
+  onNavigate,
   className,
-  showIcons = true 
+  showIcons = true,
 }: BreadcrumbNavProps) {
   return (
-    <nav className={cn("flex items-center space-x-1 text-sm", className)}>
+    <nav className={cn('flex items-center space-x-1 text-sm', className)}>
       {/* Home button */}
       <Button
         variant="ghost"
@@ -36,12 +36,12 @@ export function BreadcrumbNav({
         <Home className="w-4 h-4" />
         <span className="ml-1 hidden sm:inline">首页</span>
       </Button>
-      
+
       {/* Path items */}
       {path.map((item, index) => (
         <React.Fragment key={item.id}>
           <ChevronRight className="w-4 h-4 text-gray-400" />
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -50,26 +50,20 @@ export function BreadcrumbNav({
               onNavigate(item)
             }}
             className={cn(
-              "h-8 px-2 max-w-32 sm:max-w-none",
-              index === path.length - 1 
-                ? "text-gray-900 font-medium cursor-default" 
-                : "text-gray-600 hover:text-gray-800"
+              'h-8 px-2 max-w-32 sm:max-w-none',
+              index === path.length - 1
+                ? 'text-gray-900 font-medium cursor-default'
+                : 'text-gray-600 hover:text-gray-800'
             )}
             disabled={index === path.length - 1}
           >
-            {showIcons && item.icon && (
-              <span className="mr-1">{item.icon}</span>
-            )}
+            {showIcons && item.icon && <span className="mr-1">{item.icon}</span>}
             <span className="truncate">{item.name}</span>
             {item.type === 'campus' && (
-              <span className="ml-1 text-xs text-gray-500 hidden sm:inline">
-                校区
-              </span>
+              <span className="ml-1 text-xs text-gray-500 hidden sm:inline">校区</span>
             )}
             {item.type === 'section' && (
-              <span className="ml-1 text-xs text-gray-500 hidden sm:inline">
-                篇章
-              </span>
+              <span className="ml-1 text-xs text-gray-500 hidden sm:inline">篇章</span>
             )}
           </Button>
         </React.Fragment>
@@ -84,18 +78,18 @@ export function buildBreadcrumbPath(
   allCategories: DatabaseCategory[]
 ): BreadcrumbItem[] {
   if (!currentCategory) return []
-  
+
   const path: BreadcrumbItem[] = []
   let current: DatabaseCategory | undefined = currentCategory
-  
+
   while (current) {
     path.unshift({
       id: current.id,
       name: current.name,
       type: current.type,
-      icon: current.icon || undefined
+      icon: current.icon || undefined,
     })
-    
+
     // Find parent category
     if (current.parent_id) {
       current = allCategories.find(cat => cat.id === current!.parent_id)
@@ -103,7 +97,7 @@ export function buildBreadcrumbPath(
       break
     }
   }
-  
+
   return path
 }
 
@@ -118,41 +112,44 @@ export function useBreadcrumbNavigation() {
   const [state, setState] = React.useState<BreadcrumbState>({
     path: [],
     currentCategory: null,
-    parentCategories: []
+    parentCategories: [],
   })
-  
-  const navigateTo = React.useCallback((category: DatabaseCategory | null, allCategories: DatabaseCategory[]) => {
-    if (!category) {
-      // Navigate to home
+
+  const navigateTo = React.useCallback(
+    (category: DatabaseCategory | null, allCategories: DatabaseCategory[]) => {
+      if (!category) {
+        // Navigate to home
+        setState({
+          path: [],
+          currentCategory: null,
+          parentCategories: [],
+        })
+        return
+      }
+
+      const path = buildBreadcrumbPath(category, allCategories)
+      const parentCategories = allCategories.filter(cat => !cat.parent_id)
+
       setState({
-        path: [],
-        currentCategory: null,
-        parentCategories: []
+        path,
+        currentCategory: category,
+        parentCategories,
       })
-      return
-    }
-    
-    const path = buildBreadcrumbPath(category, allCategories)
-    const parentCategories = allCategories.filter(cat => !cat.parent_id)
-    
-    setState({
-      path,
-      currentCategory: category,
-      parentCategories
-    })
-  }, [])
-  
+    },
+    []
+  )
+
   const navigateToHome = React.useCallback(() => {
     setState({
       path: [],
       currentCategory: null,
-      parentCategories: []
+      parentCategories: [],
     })
   }, [])
-  
+
   return {
     ...state,
     navigateTo,
-    navigateToHome
+    navigateToHome,
   }
 }

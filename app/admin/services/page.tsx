@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
@@ -6,11 +6,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Plus,
+  Edit,
+  Trash2,
   ExternalLink,
   Save,
   X,
@@ -18,9 +24,14 @@ import {
   ArrowLeft,
   Star,
   Search,
-  Grid3X3
+  Grid3X3,
 } from 'lucide-react'
-import { DatabaseService, DatabaseCategory, CreateServiceRequest, UpdateServiceRequest } from '@/types/services'
+import {
+  DatabaseService,
+  DatabaseCategory,
+  CreateServiceRequest,
+  UpdateServiceRequest,
+} from '@/types/services'
 
 export default function ServicesManagePage() {
   const [adminKey, setAdminKey] = useState('')
@@ -42,7 +53,7 @@ export default function ServicesManagePage() {
     href: '',
     status: 'active',
     featured: false,
-    sort_order: 0
+    sort_order: 0,
   })
 
   // 认证检查
@@ -56,20 +67,20 @@ export default function ServicesManagePage() {
   // 加载数据
   const loadData = useCallback(async () => {
     if (!isAuthenticated || !adminKey) return
-    
+
     setLoading(true)
     try {
       // 并行加载分类和服务
       const [categoriesRes, servicesRes] = await Promise.all([
         fetch(`/api/categories?admin_key=${adminKey}`),
-        fetch(`/api/services?admin_key=${adminKey}&limit=100`)
+        fetch(`/api/services?admin_key=${adminKey}&limit=100`),
       ])
-      
+
       if (categoriesRes.ok) {
         const categoriesData = await categoriesRes.json()
         setCategories(categoriesData.categories)
       }
-      
+
       if (servicesRes.ok) {
         const servicesData = await servicesRes.json()
         setServices(servicesData.services)
@@ -84,13 +95,13 @@ export default function ServicesManagePage() {
   // 创建或更新服务
   const handleSave = async () => {
     if (!adminKey) return
-    
+
     try {
       const url = `/api/services?admin_key=${adminKey}`
-      
-      const payload = editingService 
-        ? { id: editingService.id, ...formData } as UpdateServiceRequest
-        : formData as CreateServiceRequest
+
+      const payload = editingService
+        ? ({ id: editingService.id, ...formData } as UpdateServiceRequest)
+        : (formData as CreateServiceRequest)
 
       const response = await fetch(url, {
         method: editingService ? 'PUT' : 'POST',
@@ -116,11 +127,11 @@ export default function ServicesManagePage() {
   // 删除服务
   const handleDelete = async (service: DatabaseService) => {
     if (!adminKey) return
-    
+
     if (!confirm(`确定要删除服务"${service.title}"吗？`)) {
       return
     }
-    
+
     try {
       const response = await fetch(`/api/services?admin_key=${adminKey}&id=${service.id}`, {
         method: 'DELETE',
@@ -150,7 +161,7 @@ export default function ServicesManagePage() {
       href: service.href || '',
       status: service.status,
       featured: service.featured,
-      sort_order: service.sort_order
+      sort_order: service.sort_order,
     })
     setShowDialog(true)
   }
@@ -167,7 +178,7 @@ export default function ServicesManagePage() {
       href: '',
       status: 'active',
       featured: false,
-      sort_order: services.length
+      sort_order: services.length,
     })
     setShowDialog(true)
   }
@@ -180,19 +191,23 @@ export default function ServicesManagePage() {
 
   // 处理标签输入
   const handleTagsChange = (tagsString: string) => {
-    const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag)
+    const tags = tagsString
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag)
     setFormData(prev => ({ ...prev, tags }))
   }
 
   // 过滤服务
   const filteredServices = services.filter(service => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch =
+      !searchTerm ||
       service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    
+
     const matchesCategory = !selectedCategory || service.category_id === selectedCategory
     const matchesStatus = !selectedStatus || service.status === selectedStatus
-    
+
     return matchesSearch && matchesCategory && matchesStatus
   })
 
@@ -230,8 +245,8 @@ export default function ServicesManagePage() {
                 type="password"
                 placeholder="请输入管理员密钥"
                 value={adminKey}
-                onChange={(e) => setAdminKey(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAuth()}
+                onChange={e => setAdminKey(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAuth()}
               />
             </div>
             <Button onClick={handleAuth} className="w-full bg-slate-900 hover:bg-slate-800">
@@ -250,11 +265,7 @@ export default function ServicesManagePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.history.back()}
-              >
+              <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 返回
               </Button>
@@ -288,16 +299,16 @@ export default function ServicesManagePage() {
                 placeholder="搜索服务..."
                 className="pl-10"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
             <select
               className="px-3 py-2 border border-slate-200 rounded-md"
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={e => setSelectedCategory(e.target.value)}
             >
               <option value="">全部分类</option>
-              {categories.map((category) => (
+              {categories.map(category => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
@@ -306,7 +317,7 @@ export default function ServicesManagePage() {
             <select
               className="px-3 py-2 border border-slate-200 rounded-md"
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              onChange={e => setSelectedStatus(e.target.value)}
             >
               <option value="">全部状态</option>
               <option value="active">活跃</option>
@@ -336,38 +347,36 @@ export default function ServicesManagePage() {
               </Button>
             </div>
           ) : (
-            filteredServices.map((service) => {
+            filteredServices.map(service => {
               return (
                 <Card key={service.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-lg font-semibold text-slate-900">
-                            {service.title}
-                          </h3>
+                          <h3 className="text-lg font-semibold text-slate-900">{service.title}</h3>
                           {service.featured && (
                             <Badge variant="outline" className="text-yellow-600 border-yellow-600">
                               <Star className="h-3 w-3 mr-1" />
                               推荐
                             </Badge>
                           )}
-                          <Badge 
-                            variant={service.status === 'active' ? 'default' : 'outline'}
-                          >
-                            {service.status === 'active' ? '活跃' : service.status === 'coming-soon' ? '即将上线' : '维护中'}
+                          <Badge variant={service.status === 'active' ? 'default' : 'outline'}>
+                            {service.status === 'active'
+                              ? '活跃'
+                              : service.status === 'coming-soon'
+                                ? '即将上线'
+                                : '维护中'}
                           </Badge>
                           <Badge variant="secondary" className="max-w-xs truncate">
                             {getCategoryPath(service.category_id)}
                           </Badge>
                         </div>
-                        
+
                         {service.description && (
-                          <p className="text-slate-600 mb-3">
-                            {service.description}
-                          </p>
+                          <p className="text-slate-600 mb-3">{service.description}</p>
                         )}
-                        
+
                         {service.tags && service.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-3">
                             {service.tags.map((tag, index) => (
@@ -377,13 +386,13 @@ export default function ServicesManagePage() {
                             ))}
                           </div>
                         )}
-                        
+
                         <div className="flex items-center space-x-4 text-sm text-slate-500">
                           <span>排序: {service.sort_order}</span>
                           {service.href && (
-                            <a 
-                              href={service.href} 
-                              target="_blank" 
+                            <a
+                              href={service.href}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center hover:text-slate-700"
                             >
@@ -394,17 +403,13 @@ export default function ServicesManagePage() {
                           <span>创建时间: {new Date(service.created_at).toLocaleString()}</span>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2 ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(service)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(service)}>
                           <Edit className="h-4 w-4 mr-1" />
                           编辑
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
@@ -428,14 +433,10 @@ export default function ServicesManagePage() {
       <Dialog open={showDialog} onOpenChange={handleCloseDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
-              {editingService ? '编辑服务' : '创建服务'}
-            </DialogTitle>
-            <DialogDescription>
-              填写服务信息
-            </DialogDescription>
+            <DialogTitle>{editingService ? '编辑服务' : '创建服务'}</DialogTitle>
+            <DialogDescription>填写服务信息</DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 max-h-96 overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -444,9 +445,11 @@ export default function ServicesManagePage() {
                   id="category"
                   className="w-full px-3 py-2 border border-slate-200 rounded-md"
                   value={formData.category_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
+                  onChange={e => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
                 >
-                  <option value="" disabled>选择分类（校区不能直接关联服务）</option>
+                  <option value="" disabled>
+                    选择分类（校区不能直接关联服务）
+                  </option>
                   {categories
                     .filter(cat => cat.type !== 'campus')
                     .map(cat => (
@@ -466,7 +469,12 @@ export default function ServicesManagePage() {
                   id="status"
                   className="w-full px-3 py-2 border border-slate-200 rounded-md"
                   value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'coming-soon' | 'maintenance' }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      status: e.target.value as 'active' | 'coming-soon' | 'maintenance',
+                    }))
+                  }
                 >
                   <option value="active">活跃</option>
                   <option value="coming-soon">即将上线</option>
@@ -481,7 +489,7 @@ export default function ServicesManagePage() {
                 id="title"
                 placeholder="请输入服务标题"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
 
@@ -493,7 +501,7 @@ export default function ServicesManagePage() {
                 className="w-full px-3 py-2 border border-slate-200 rounded-md"
                 placeholder="请输入服务描述"
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
               />
             </div>
 
@@ -504,7 +512,7 @@ export default function ServicesManagePage() {
                 type="url"
                 placeholder="https://example.com"
                 value={formData.href}
-                onChange={(e) => setFormData(prev => ({ ...prev, href: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, href: e.target.value }))}
               />
             </div>
 
@@ -515,7 +523,7 @@ export default function ServicesManagePage() {
                 type="url"
                 placeholder="https://example.com/icon.png"
                 value={formData.image}
-                onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, image: e.target.value }))}
               />
             </div>
 
@@ -525,7 +533,7 @@ export default function ServicesManagePage() {
                 id="tags"
                 placeholder="学习,工具,资源"
                 value={formData.tags?.join(', ') || ''}
-                onChange={(e) => handleTagsChange(e.target.value)}
+                onChange={e => handleTagsChange(e.target.value)}
               />
             </div>
 
@@ -537,7 +545,9 @@ export default function ServicesManagePage() {
                   type="number"
                   placeholder="0"
                   value={formData.sort_order}
-                  onChange={(e) => setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 0 }))}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 0 }))
+                  }
                 />
               </div>
 
@@ -546,7 +556,7 @@ export default function ServicesManagePage() {
                   type="checkbox"
                   id="featured"
                   checked={formData.featured}
-                  onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
+                  onChange={e => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
                   className="rounded border-slate-300"
                 />
                 <Label htmlFor="featured">设为推荐服务</Label>
