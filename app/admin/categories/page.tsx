@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
@@ -6,11 +6,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { HierarchicalCategoryManager } from '@/components/admin/HierarchicalCategoryManager'
-import { 
-  Plus, 
-  Edit, 
+import {
+  Plus,
+  Edit,
   Trash2,
   Save,
   X,
@@ -19,7 +25,7 @@ import {
   Star,
   Grid3X3,
   List,
-  TreePine
+  TreePine,
 } from 'lucide-react'
 import { DatabaseCategory, CreateCategoryRequest, UpdateCategoryRequest } from '@/types/services'
 import { useRouter } from 'next/navigation'
@@ -39,18 +45,19 @@ export default function CategoriesManagePage() {
     type: 'general',
     parent_id: null,
     featured: false,
-    sort_order: 0
+    sort_order: 0,
   })
 
   // 处理认证相关错误
   const handleAuthError = (error: unknown) => {
-    if (error instanceof Error && (
-      error.message.includes('未认证') || 
-      error.message.includes('认证失败') ||
-      error.message.includes('无效的 token') ||
-      error.message.includes('token') ||
-      error.message.includes('Unauthorized')
-    )) {
+    if (
+      error instanceof Error &&
+      (error.message.includes('未认证') ||
+        error.message.includes('认证失败') ||
+        error.message.includes('无效的 token') ||
+        error.message.includes('token') ||
+        error.message.includes('Unauthorized'))
+    ) {
       // 清除本地存储的token
       localStorage.removeItem('admin_token')
       localStorage.removeItem('admin_user')
@@ -63,7 +70,7 @@ export default function CategoriesManagePage() {
   // 使用认证的API请求
   const authenticatedRequest = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('admin_token')
-    
+
     if (!token) {
       throw new Error('未认证')
     }
@@ -137,7 +144,7 @@ export default function CategoriesManagePage() {
           body: JSON.stringify(formData),
         })
       }
-      
+
       loadCategories()
       handleCloseDialog()
     } catch (error) {
@@ -156,7 +163,7 @@ export default function CategoriesManagePage() {
     if (!confirm(`确定要删除分类"${category.name}"吗？`)) {
       return
     }
-    
+
     try {
       await authenticatedRequest(`/api/categories?id=${category.id}`, {
         method: 'DELETE',
@@ -183,7 +190,7 @@ export default function CategoriesManagePage() {
       color: category.color,
       type: category.type,
       featured: category.featured,
-      sort_order: category.sort_order
+      sort_order: category.sort_order,
     })
     setShowDialog(true)
   }
@@ -198,7 +205,7 @@ export default function CategoriesManagePage() {
       color: 'blue',
       type: 'general',
       featured: false,
-      sort_order: categories.length
+      sort_order: categories.length,
     })
     setShowDialog(true)
   }
@@ -223,11 +230,7 @@ export default function CategoriesManagePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push('/admin')}
-              >
+              <Button variant="ghost" size="sm" onClick={() => router.push('/admin')}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 返回
               </Button>
@@ -238,11 +241,7 @@ export default function CategoriesManagePage() {
                 <Plus className="h-4 w-4 mr-2" />
                 新建分类
               </Button>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-              >
+              <Button variant="outline" size="sm" onClick={handleLogout}>
                 注销
               </Button>
             </div>
@@ -280,7 +279,7 @@ export default function CategoriesManagePage() {
           <HierarchicalCategoryManager
             categories={categories}
             onRefresh={loadCategories}
-            onAuthError={(error) => {
+            onAuthError={error => {
               if (handleAuthError(error)) {
                 return
               }
@@ -290,86 +289,80 @@ export default function CategoriesManagePage() {
         ) : (
           /* 分类列表 */
           <div className="space-y-4">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-slate-500">暂无分类数据</p>
-              <Button onClick={handleCreate} className="mt-4">
-                <Plus className="h-4 w-4 mr-2" />
-                创建第一个分类
-              </Button>
-            </div>
-          ) : (
-            categories.map((category) => (
-              <Card key={category.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <span className="text-2xl">{category.icon || '📦'}</span>
-                        <h3 className="text-lg font-semibold text-slate-900">
-                          {category.name}
-                        </h3>
-                        {category.featured && (
-                          <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-                            <Star className="h-3 w-3 mr-1" />
-                            推荐
-                          </Badge>
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-500">暂无分类数据</p>
+                <Button onClick={handleCreate} className="mt-4">
+                  <Plus className="h-4 w-4 mr-2" />
+                  创建第一个分类
+                </Button>
+              </div>
+            ) : (
+              categories.map(category => (
+                <Card key={category.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <span className="text-2xl">{category.icon || '📦'}</span>
+                          <h3 className="text-lg font-semibold text-slate-900">{category.name}</h3>
+                          {category.featured && (
+                            <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                              <Star className="h-3 w-3 mr-1" />
+                              推荐
+                            </Badge>
+                          )}
+                          <Badge variant="secondary">{category.color}</Badge>
+                        </div>
+
+                        {category.description && (
+                          <p className="text-slate-600 mb-3">{category.description}</p>
                         )}
-                        <Badge variant="secondary">{category.color}</Badge>
+
+                        <div className="flex items-center space-x-4 text-sm text-slate-500">
+                          <span>排序: {category.sort_order}</span>
+                          <span>服务数: {category.services?.length || 0}</span>
+                          <span>创建时间: {new Date(category.created_at).toLocaleString()}</span>
+                        </div>
                       </div>
-                      
-                      {category.description && (
-                        <p className="text-slate-600 mb-3">
-                          {category.description}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center space-x-4 text-sm text-slate-500">
-                        <span>排序: {category.sort_order}</span>
-                        <span>服务数: {category.services?.length || 0}</span>
-                        <span>创建时间: {new Date(category.created_at).toLocaleString()}</span>
+
+                      <div className="flex items-center space-x-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            window.open(`/admin/services?category=${category.id}`, '_blank')
+                          }
+                        >
+                          <Grid3X3 className="h-4 w-4 mr-1" />
+                          管理服务
+                        </Button>
+
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(category)}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          编辑
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:border-red-600"
+                          onClick={() => handleDelete(category)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          删除
+                        </Button>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(`/admin/services?category=${category.id}`, '_blank')}
-                      >
-                        <Grid3X3 className="h-4 w-4 mr-1" />
-                        管理服务
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(category)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        编辑
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:border-red-600"
-                        onClick={() => handleDelete(category)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        删除
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         )}
       </main>
 
@@ -377,14 +370,10 @@ export default function CategoriesManagePage() {
       <Dialog open={showDialog} onOpenChange={handleCloseDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editingCategory ? '编辑分类' : '创建分类'}
-            </DialogTitle>
-            <DialogDescription>
-              填写分类信息
-            </DialogDescription>
+            <DialogTitle>{editingCategory ? '编辑分类' : '创建分类'}</DialogTitle>
+            <DialogDescription>填写分类信息</DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">分类名称 *</Label>
@@ -392,7 +381,7 @@ export default function CategoriesManagePage() {
                 id="name"
                 placeholder="请输入分类名称"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
 
@@ -402,7 +391,7 @@ export default function CategoriesManagePage() {
                 id="icon"
                 placeholder="🎓"
                 value={formData.icon}
-                onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, icon: e.target.value }))}
               />
             </div>
 
@@ -412,7 +401,7 @@ export default function CategoriesManagePage() {
                 id="description"
                 placeholder="请输入分类描述"
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
               />
             </div>
 
@@ -423,7 +412,7 @@ export default function CategoriesManagePage() {
                   id="color"
                   className="w-full px-3 py-2 border border-slate-200 rounded-md"
                   value={formData.color}
-                  onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+                  onChange={e => setFormData(prev => ({ ...prev, color: e.target.value }))}
                 >
                   <option value="blue">蓝色</option>
                   <option value="green">绿色</option>
@@ -442,7 +431,9 @@ export default function CategoriesManagePage() {
                   type="number"
                   placeholder="0"
                   value={formData.sort_order}
-                  onChange={(e) => setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 0 }))}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 0 }))
+                  }
                 />
               </div>
             </div>
@@ -452,7 +443,7 @@ export default function CategoriesManagePage() {
                 type="checkbox"
                 id="featured"
                 checked={formData.featured}
-                onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
+                onChange={e => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
                 className="rounded border-slate-300"
               />
               <Label htmlFor="featured">设为推荐分类</Label>
