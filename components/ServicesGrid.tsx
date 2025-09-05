@@ -135,7 +135,7 @@ export function ServicesGrid({
         filteredData.services.length > 0 ? (
           <div className={cn(
             layoutMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
               : "space-y-4"
           )}>
             {filteredData.services.map((service) => (
@@ -144,7 +144,7 @@ export function ServicesGrid({
                 service={service}
                 onServiceAccess={onServiceAccess}
                 defaultImage={defaultImage}
-                className={layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : ''}
+                className={layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : 'h-full'}
               />
             ))}
           </div>
@@ -187,7 +187,7 @@ export function ServicesGrid({
         currentServices.length > 0 ? (
           <div className={cn(
             layoutMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
               : "space-y-4"
           )}>
             {currentServices.map((service) => (
@@ -196,7 +196,7 @@ export function ServicesGrid({
                 service={service}
                 onServiceAccess={onServiceAccess}
                 defaultImage={defaultImage}
-                className={layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : ''}
+                className={layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : 'h-full'}
               />
             ))}
           </div>

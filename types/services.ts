@@ -10,6 +10,7 @@ export interface DatabaseService {
   status: 'active' | 'coming-soon' | 'maintenance'
   featured: boolean
   sort_order: number
+  rating: number | null // 评分字段，1-5星
   created_at: string
   updated_at: string
 }
@@ -54,6 +55,9 @@ export interface Service {
   children?: SubCard[]
   status?: 'active' | 'coming-soon' | 'maintenance'
   featured?: boolean
+  rating?: number | null // 评分字段，1-5星
+  category_id?: string
+  created_at?: string
 }
 
 export interface ServiceCategory {
@@ -138,4 +142,50 @@ export interface CategoryStats {
   section_count: number
   general_count: number
   services_by_category: Record<string, number>
+}
+
+// 筛选和排序相关类型
+export type SortOption = 'newest' | 'rating_desc'
+
+export interface ServiceQuery {
+  // 搜索
+  search?: string
+  // 分类筛选
+  category?: string
+  // 标签筛选（逗号分隔）
+  tags?: string
+  // 评分下限
+  ratingMin?: number
+  // 排序方式
+  sort?: SortOption
+  // 分页参数
+  page?: number
+  limit?: number
+}
+
+export interface ServiceQueryParams {
+  search?: string
+  category?: string
+  tags?: string
+  ratingMin?: string
+  sort?: SortOption
+  page?: string
+  limit?: string
+}
+
+export interface ServiceListResponse {
+  items: Service[]
+  page: number
+  limit: number
+  total: number
+}
+
+export interface FilterState {
+  search: string
+  category: string
+  tags: string[]
+  ratingMin: number | null
+  sort: SortOption
+  page: number
+  limit: number
 }

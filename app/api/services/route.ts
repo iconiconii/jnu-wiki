@@ -1,60 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { CreateServiceRequest, UpdateServiceRequest } from '@/types/services'
+import { CreateServiceRequest, UpdateServiceRequest, ServiceListResponse, ServiceQuery, SortOption } from '@/types/services'
 
-// 获取所有服务
+// 获取服务列表（支持公开访问的筛选和排序）
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const adminKey = searchParams.get('admin_key')
     
-    // 验证管理员权限
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json(
-        { error: '无访问权限' },
-        { status: 403 }
-      )
+    // 管理员模式
+    if (adminKey === process.env.ADMIN_SECRET_KEY) {
+      return getServicesAdmin(searchParams)
     }
-
-    const categoryId = searchParams.get('category_id')
-    const status = searchParams.get('status')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
-
-    let query = supabaseAdmin
-      .from('services')
-      .select(`
-        *,
-        categories!inner(name, icon)
-      `)
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true })
-      .range(offset, offset + limit - 1)
-
-    // 添加过滤条件
-    if (categoryId) {
-      query = query.eq('category_id', categoryId)
-    }
-    if (status) {
-      query = query.eq('status', status)
-    }
-
-    const { data, error, count } = await query
-
-    if (error) {
-      console.error('Database error:', error)
-      return NextResponse.json(
-        { error: '数据库错误' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      services: data || [],
-      total: count,
-      limit,
-      offset
-    })
+    
+    // 公开模式：支持筛选和排序
+    return getServicesPublic(searchParams)
 
   } catch (error) {
     console.error('Get services error:', error)
@@ -63,6 +23,159 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// 公开访问的服务列表（支持筛选和排序）
+async function getServicesPublic(searchParams: URLSearchParams) {
+  try {
+    // 解析查询参数
+    const query: ServiceQuery = {
+      search: searchParams.get('search') || undefined,
+      category: searchParams.get('category') || undefined,
+      tags: searchParams.get('tags') || undefined,
+      ratingMin: searchParams.get('ratingMin') ? Number(searchParams.get('ratingMin')) : undefined,
+      sort: (searchParams.get('sort') as SortOption) || 'newest',
+      page: Math.max(1, Number(searchParams.get('page')) || 1),
+      limit: Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 20))
+    }
+
+    // 参数验证
+    if (query.ratingMin && (isNaN(query.ratingMin) || query.ratingMin < 1 || query.ratingMin > 5)) {
+      query.ratingMin = undefined
+    }
+
+    let dbQuery = supabaseAdmin
+      .from('services')
+      .select(`
+        id,
+        title,
+        description,
+        tags,
+        image,
+        href,
+        status,
+        featured,
+        rating,
+        category_id,
+        created_at,
+        categories!inner(id, name, icon, color)
+      `, { count: 'exact' })
+      .eq('status', 'active') // 只显示活跃服务
+
+    // 搜索功能
+    if (query.search) {
+      dbQuery = dbQuery.or(`title.ilike.%${query.search}%,description.ilike.%${query.search}%`)
+    }
+
+    // 分类筛选
+    if (query.category) {
+      dbQuery = dbQuery.eq('category_id', query.category)
+    }
+
+    // 标签筛选（包含任一标签）
+    if (query.tags) {
+      const tagArray = query.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      if (tagArray.length > 0) {
+        const tagConditions = tagArray.map(tag => `tags.cs.{${tag}}`).join(',')
+        dbQuery = dbQuery.or(tagConditions)
+      }
+    }
+
+    // A 路线：不涉及价格过滤
+
+    // 评分筛选
+    if (query.ratingMin !== undefined) {
+      dbQuery = dbQuery.gte('rating', query.ratingMin)
+    }
+
+    // 排序
+    switch (query.sort) {
+      case 'newest':
+        dbQuery = dbQuery.order('created_at', { ascending: false })
+        break
+      case 'rating_desc':
+        // 评分从高到低，空值靠后
+        dbQuery = dbQuery.order('rating', { ascending: false, nullsFirst: false })
+        break
+      default:
+        dbQuery = dbQuery.order('created_at', { ascending: false })
+    }
+
+    // 分页
+    const page = query.page || 1
+    const limit = query.limit || 20
+    const offset = (page - 1) * limit
+    dbQuery = dbQuery.range(offset, offset + limit - 1)
+
+    const { data, error, count } = await dbQuery
+
+    if (error) {
+      console.error('Database error:', error)
+      return NextResponse.json(
+        { error: '数据库查询失败' },
+        { status: 500 }
+      )
+    }
+
+    const response: ServiceListResponse = {
+      items: data || [],
+      page: page,
+      limit: limit,
+      total: count || 0
+    }
+
+    return NextResponse.json(response)
+
+  } catch (error) {
+    console.error('Get public services error:', error)
+    return NextResponse.json(
+      { error: '服务器错误' },
+      { status: 500 }
+    )
+  }
+}
+
+// 管理员模式的服务列表
+async function getServicesAdmin(searchParams: URLSearchParams) {
+  const categoryId = searchParams.get('category_id')
+  const status = searchParams.get('status')
+  const limit = parseInt(searchParams.get('limit') || '50')
+  const offset = parseInt(searchParams.get('offset') || '0')
+
+  let query = supabaseAdmin
+    .from('services')
+    .select(`
+      *,
+      categories!inner(name, icon)
+    `)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+    .range(offset, offset + limit - 1)
+
+  // 添加过滤条件
+  if (categoryId) {
+    query = query.eq('category_id', categoryId)
+  }
+  if (status) {
+    query = query.eq('status', status)
+  }
+
+  const { data, error, count } = await query
+
+  if (error) {
+    console.error('Database error:', error)
+    return NextResponse.json(
+      { error: '数据库错误' },
+      { status: 500 }
+    )
+  }
+
+  return NextResponse.json({
+    services: data || [],
+    total: count,
+    limit,
+    offset
+  })
 }
 
 // 创建服务

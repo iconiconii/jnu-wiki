@@ -367,11 +367,11 @@ export function HierarchicalServicesGrid({
               </div>
             </div>
             <AnimatedGrid 
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch"
               staggerDelay={0.05}
             >
               {getAllMatchingServices.map((service) => (
-                <div key={service.id} className="space-y-2">
+                <div key={service.id} className="space-y-2 h-full flex flex-col">
                   <div className="text-xs text-primary px-1 font-medium">
                     📍 {service.categoryPath}
                   </div>
@@ -379,6 +379,7 @@ export function HierarchicalServicesGrid({
                     service={service}
                     onServiceAccess={onServiceAccess}
                     defaultImage={defaultImage}
+                    className="h-full"
                   />
                 </div>
               ))}
@@ -441,13 +442,13 @@ export function HierarchicalServicesGrid({
           <AnimatedGrid 
             className={cn(
               layoutMode === 'grid' 
-                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch"
                 : "space-y-3 sm:space-y-4"
             )}
             staggerDelay={0.05}
           >
             {navState.displayServices.map((service) => (
-              <div key={service.id} className="space-y-2">
+              <div key={service.id} className="space-y-2 h-full flex flex-col">
                 {/* Show category path for services in search mode */}
                 {searchTerm && navState.currentCategory && (
                   <div className="text-xs text-muted-foreground px-1">
@@ -458,7 +459,11 @@ export function HierarchicalServicesGrid({
                   service={service}
                   onServiceAccess={onServiceAccess}
                   defaultImage={defaultImage}
-                  className={layoutMode === 'list' ? 'flex flex-row items-center max-w-none' : ''}
+                  className={cn(
+                    layoutMode === 'list' 
+                      ? 'flex flex-row items-center max-w-none'
+                      : 'h-full'
+                  )}
                 />
               </div>
             ))}

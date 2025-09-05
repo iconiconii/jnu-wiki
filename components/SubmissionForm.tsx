@@ -1,14 +1,13 @@
 "use client"
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { servicesConfig } from '@/data/services'
 import { Loader2, Send, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { useDebouncedSubmit } from '@/hooks/useDebounce'
+import { CategorySelector } from '@/components/CategorySelector'
 
 interface SubmissionFormProps {
   isOpen: boolean
@@ -18,6 +17,7 @@ interface SubmissionFormProps {
 export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
   const [formData, setFormData] = useState({
     category: '',
+    categoryPath: '',
     title: '',
     description: '',
     url: '',
@@ -38,14 +38,15 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
   }, [])
 
   // 初始化数学验证
-  useState(() => {
+  useEffect(() => {
     generateMathChallenge()
-  })
+  }, [generateMathChallenge])
 
   // 表单重置
   const resetForm = useCallback(() => {
     setFormData({
       category: '',
+      categoryPath: '',
       title: '',
       description: '',
       url: '',
@@ -55,6 +56,15 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
     setErrorMessage('')
     generateMathChallenge()
   }, [generateMathChallenge])
+
+  // 处理分类选择
+  const handleCategorySelect = (categoryId: string, categoryPath: string) => {
+    setFormData(prev => ({
+      ...prev,
+      category: categoryId,
+      categoryPath: categoryPath
+    }))
+  }
 
   // 实际的提交逻辑
   const performSubmit = useCallback(async (e: React.FormEvent) => {
@@ -149,12 +159,10 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
     debouncedSubmit(e)
   }, [lastSubmitAttempt, debouncedSubmit, submitStatus])
 
-  // 获取可用的分类
-  const availableCategories = servicesConfig.categories.map(cat => cat.name)
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Send className="h-5 w-5" />
@@ -176,24 +184,19 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 分类选择 */}
+          <>
+          <div className="flex-1 overflow-y-auto">
+            <form id="submission-form" onSubmit={handleSubmit} className="space-y-4 p-1">
             <div className="space-y-2">
-              <Label htmlFor="category">分类 *</Label>
-              <div className="flex flex-wrap gap-2">
-                {availableCategories.map((category) => (
-                  <Badge
-                    key={category}
-                    variant={formData.category === category ? "default" : "outline"}
-                    className="cursor-pointer hover:bg-slate-100"
-                    onClick={() => setFormData(prev => ({ ...prev, category }))}
-                  >
-                    {category}
-                  </Badge>
-                ))}
-              </div>
-              {!formData.category && (
-                <p className="text-sm text-slate-500">请选择一个分类</p>
+              <CategorySelector
+                selectedCategoryId={formData.category}
+                onCategorySelect={handleCategorySelect}
+                error={!formData.category ? '请选择一个分类' : undefined}
+              />
+              {formData.categoryPath && (
+                <div className="p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                  <span className="text-blue-700">已选择：{formData.categoryPath}</span>
+                </div>
               )}
             </div>
 
@@ -283,8 +286,11 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
               </div>
             )}
 
-            {/* 提交按钮 */}
-            <div className="flex justify-end space-x-3 pt-4">
+            </form>
+          </div>
+          
+          <div className="border-t pt-4 mt-4 bg-white">
+            <div className="flex justify-end space-x-3">
               <Button
                 type="button"
                 variant="outline"
@@ -295,6 +301,7 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
               </Button>
               <Button
                 type="submit"
+                form="submission-form"
                 disabled={isSubmitting || submitStatus === 'debouncing'}
                 className={`text-white ${
                   submitStatus === 'debouncing' 
@@ -320,7 +327,8 @@ export function SubmissionForm({ isOpen, onOpenChange }: SubmissionFormProps) {
                 )}
               </Button>
             </div>
-          </form>
+          </div>
+          </>
         )}
       </DialogContent>
     </Dialog>

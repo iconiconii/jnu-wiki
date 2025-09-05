@@ -228,6 +228,35 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // 分类验证：检查分类ID是否存在且类型正确
+    const { data: categoryData, error: categoryError } = await supabaseAdmin
+      .from('categories')
+      .select('id, name, type')
+      .eq('id', category)
+      .single()
+    
+    if (categoryError || !categoryData) {
+      return NextResponse.json(
+        { error: '无效的分类ID' },
+        { status: 400 }
+      )
+    }
+    
+    // 验证分类类型：只允许投稿到 section 或 general 类型
+    if (categoryData.type === 'campus') {
+      return NextResponse.json(
+        { error: '不能直接投稿到校区，请选择具体的篇章分类' },
+        { status: 400 }
+      )
+    }
+    
+    if (!['section', 'general'].includes(categoryData.type)) {
+      return NextResponse.json(
+        { error: '无效的分类类型，只能投稿到篇章或通用分类' },
+        { status: 400 }
+      )
+    }
+    
     // 生成内容指纹用于防重复提交
     const contentFingerprint = generateSubmissionFingerprint(cleanTitle, url, cleanDescription)
     
@@ -417,36 +446,25 @@ export async function PUT(request: NextRequest) {
     // 如果审核通过，自动创建服务记录
     if (status === 'approved' && data) {
       try {
-        // 查找对应的分类ID
-        const { data: categoryData, error: categoryError } = await supabaseAdmin
-          .from('categories')
-          .select('id')
-          .eq('name', data.category)
-          .single()
+        // 直接使用category字段作为分类ID（新版本中存储的就是ID）
+        const { error: serviceError } = await supabaseAdmin
+          .from('services')
+          .insert({
+            category_id: data.category, // 现在category字段存储的是UUID
+            title: data.title,
+            description: data.description,
+            href: data.url,
+            status: 'active',
+            featured: false,
+            sort_order: 0,
+            tags: [] // 默认空标签，管理员可后续编辑
+          })
         
-        if (categoryError) {
-          console.error('Category lookup error:', categoryError)
-        } else if (categoryData) {
-          // 创建服务记录
-          const { error: serviceError } = await supabaseAdmin
-            .from('services')
-            .insert({
-              category_id: categoryData.id,
-              title: data.title,
-              description: data.description,
-              href: data.url,
-              status: 'active',
-              featured: false,
-              sort_order: 0,
-              tags: [] // 默认空标签，管理员可后续编辑
-            })
-          
-          if (serviceError) {
-            console.error('Service creation error:', serviceError)
-            // 不阻塞响应，记录错误即可
-          } else {
-            console.log('Service created successfully for submission:', data.id)
-          }
+        if (serviceError) {
+          console.error('Service creation error:', serviceError)
+          // 不阻塞响应，记录错误即可
+        } else {
+          console.log('Service created successfully for submission:', data.id)
         }
       } catch (serviceCreationError) {
         console.error('Service creation failed:', serviceCreationError)
