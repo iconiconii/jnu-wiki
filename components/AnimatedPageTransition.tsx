@@ -52,15 +52,54 @@ export function AnimatedPageTransition({
 
 // 卡片进入动画组件
 interface AnimatedGridProps {
-  children: React.ReactNode[]
+  children: React.ReactNode
   className?: string
   staggerDelay?: number
 }
 
 export function AnimatedGrid({ children, className = '', staggerDelay = 0.1 }: AnimatedGridProps) {
+  const childArray = React.Children.toArray(children)
+  const prefersReducedMotion = useReducedMotion()
+
+  const childVariants = prefersReducedMotion
+    ? {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 },
+        exit: { opacity: 0 },
+      }
+    : {
+        hidden: {
+          opacity: 0,
+          y: 24,
+          scale: 0.96,
+        },
+        visible: {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          transition: {
+            type: 'tween' as const,
+            ease: [0.16, 1, 0.3, 1] as const,
+            duration: 0.26,
+          },
+        },
+        exit: {
+          opacity: 0,
+          y: -16,
+          scale: 0.97,
+          transition: {
+            type: 'tween' as const,
+            ease: [0.33, 1, 0.68, 1] as const,
+            duration: 0.2,
+          },
+        },
+      }
+
   return (
     <motion.div
       className={className}
+      layout
+      style={{ willChange: 'transform, opacity' }}
       initial="hidden"
       animate="visible"
       variants={{
@@ -71,31 +110,29 @@ export function AnimatedGrid({ children, className = '', staggerDelay = 0.1 }: A
         },
       }}
     >
-      {children.map((child, index) => (
-        <motion.div
-          key={index}
-          variants={{
-            hidden: {
-              opacity: 0,
-              y: 30,
-              scale: 0.9,
-            },
-            visible: {
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              transition: {
-                type: 'spring',
-                stiffness: 300,
-                damping: 25,
-              },
-            },
-          }}
-          className="h-full"
-        >
-          {child}
-        </motion.div>
-      ))}
+      <AnimatePresence mode="popLayout">
+        {childArray.map((child, index) => {
+          let key: React.Key = index
+          if (React.isValidElement(child) && child.key != null) {
+            key = child.key
+          }
+
+          return (
+            <motion.div
+              key={key}
+              variants={childVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              layout
+              style={{ willChange: 'transform, opacity' }}
+              className="h-full"
+            >
+              {child}
+            </motion.div>
+          )
+        })}
+      </AnimatePresence>
     </motion.div>
   )
 }
